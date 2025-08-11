@@ -96,5 +96,6 @@ export function getRegex<T extends string | object = string>(f: RegexGetter<T>):
 /**
  * 缓存生成的正则表达式
  * @param f 生成正则表达式的函数
+ * @deprecated 需要改为使用`getRegex`
  */
 export const getObjRegex = getRegex;

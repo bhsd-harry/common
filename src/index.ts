@@ -1,3 +1,10 @@
+declare interface JsonError {
+	message: string;
+	line: number | null;
+	column: number | null;
+	position: number | null;
+}
+
 export type RegexGetter<T = string> = (s: T) => RegExp;
 
 export const wmf = 'wiktionary|wiki(?:pedia|books|news|quote|source|versity|voyage)';
@@ -73,11 +80,9 @@ export const sanitizeInlineStyle = (style: string): string =>
  * 缓存生成的正则表达式
  * @param f 生成正则表达式的函数
  */
-/* eslint-disable jsdoc/require-jsdoc */
 export function getRegex(f: RegexGetter): RegexGetter;
 export function getRegex<T extends object>(f: RegexGetter<T>): RegexGetter<T>;
 export function getRegex<T extends string | object = string>(f: RegexGetter<T>): RegexGetter<T> {
-/* eslint-enable jsdoc/require-jsdoc */
 	const map = new Map<T, RegExp>(),
 		weakMap = new WeakMap<T & object, RegExp>();
 	return s => {
@@ -99,3 +104,26 @@ export function getRegex<T extends string | object = string>(f: RegexGetter<T>):
  * @deprecated 需要改为使用`getRegex`
  */
 export const getObjRegex = getRegex;
+
+const mt2num = (mt: RegExpExecArray | null): number | null => mt && Number(mt[1]);
+
+/**
+ * 诊断JSON字符串中的语法错误
+ * @param str JSON字符串
+ */
+export const lintJSON = (str: string): JsonError[] => {
+	try {
+		if (str.trim()) {
+			JSON.parse(str);
+		}
+	} catch (e) {
+		if (e instanceof SyntaxError) {
+			const {message} = e,
+				line = mt2num(/\bline (\d+)/u.exec(message)),
+				column = mt2num(/\bcolumn (\d+)/u.exec(message)),
+				position = mt2num(/\bposition (\d+)/u.exec(message));
+			return [{message, line, column, position}];
+		}
+	}
+	return [];
+};

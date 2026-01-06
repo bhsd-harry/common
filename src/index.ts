@@ -1,7 +1,10 @@
+import {json_parse} from '../vendor/json_parse.js';
+
 declare interface JsonError {
+	severity?: 'error' | 'warning';
 	message: string;
-	line: number | null;
-	column: number | null;
+	line?: number | null;
+	column?: number | null;
 	position: number | null;
 }
 
@@ -108,17 +111,16 @@ export const getObjRegex = getRegex;
 const mt2num = (mt: RegExpExecArray | null): number | null => mt && Number(mt[1]);
 
 /**
- * 诊断JSON字符串中的语法错误
+ * 使用`JSON.parse()`诊断JSON字符串中的语法错误
  * @param str JSON字符串
+ * @param force 是否强制诊断
  */
-export const lintJSON = (str: string): JsonError[] => {
-	try {
-		if (str.trim()) {
+export const lintJSONNative = (str: string, force?: boolean): JsonError[] => {
+	if (force || str.trim()) {
+		try {
 			JSON.parse(str);
-		}
-	} catch (e) {
-		if (e instanceof SyntaxError) {
-			const {message} = e,
+		} catch (e) {
+			const {message} = e as SyntaxError,
 				line = mt2num(/\bline (\d+)/u.exec(message)),
 				column = mt2num(/\bcolumn (\d+)/u.exec(message)),
 				position = mt2num(/\bposition (\d+)/u.exec(message));
@@ -126,4 +128,32 @@ export const lintJSON = (str: string): JsonError[] => {
 		}
 	}
 	return [];
+};
+
+/**
+ * 诊断JSON字符串中的语法错误
+ * @param str JSON字符串
+ */
+export const lintJSON = (str: string): JsonError[] => {
+	if (!str.trim()) {
+		return [];
+	}
+	const errors: JsonError[] = [];
+	try {
+		json_parse(str);
+	} catch (e) {
+		if (!(e instanceof Error)) {
+			const {message, at} = e as {message: string, at: number},
+				isDuplicate = message.startsWith("Duplicate key '");
+			errors.push({
+				message,
+				position: at - 1,
+				severity: isDuplicate ? 'warning' : 'error',
+			});
+			if (!isDuplicate) {
+				return errors;
+			}
+		}
+	}
+	return [...lintJSONNative(str, true), ...errors];
 };

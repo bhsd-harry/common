@@ -128,7 +128,7 @@ export const json_parse = /* @__PURE__ */ (() => {
             }
         }
         const value = Number(string);
-        if (!isFinite(value)) {
+        if (!Number.isFinite(value)) {
             error("Bad number");
         }
     };

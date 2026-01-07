@@ -4,6 +4,9 @@ export default [
 	...config,
 	browser,
 	{
+		ignores: ['test/**/*.json'],
+	},
+	{
 		rules: {
 			camelcase: [
 				2,
@@ -16,28 +19,18 @@ export default [
 	{
 		files: ['src/json_parse.ts'],
 		rules: {
-			'default-case': 0,
 			'no-unmodified-loop-condition': 0,
-			'prefer-template': 0,
 			'jsdoc/no-bad-blocks': 0,
 			'unicorn/prefer-code-point': 0,
-			'@stylistic/comma-dangle': [
-				2,
-				'never',
-			],
-			'@stylistic/indent': [
-				2,
-				4,
-				{
-					SwitchCase: 0,
-				},
-			],
 			'@stylistic/multiline-comment-style': 0,
-			'@stylistic/no-extra-parens': 0,
 			'@stylistic/padded-blocks': 0,
 			'@stylistic/quotes': [
 				2,
 				'double',
+				{
+					allowTemplateLiterals: 'avoidEscape',
+					avoidEscape: true,
+				},
 			],
 			'@typescript-eslint/no-confusing-void-expression': 0,
 			'@typescript-eslint/no-unnecessary-condition': 0,

@@ -19,6 +19,19 @@
     USE YOUR OWN COPY. IT IS EXTREMELY UNWISE TO LOAD CODE FROM SERVERS YOU DO NOT CONTROL.
 */
 
+export interface JsonSyntaxError {
+    warnings?: ExtendedJsonSyntaxError[];
+    severity?: "error" | "warning";
+    message?: string;
+    position?: number | null;
+}
+export interface ExtendedJsonSyntaxError extends Omit<JsonSyntaxError, "warnings"> {
+    severity: "error" | "warning";
+    message: string;
+    line?: number | null;
+    column?: number | null;
+}
+
 export const json_parse = /* @__PURE__ */ (() => {
 
     // This is a function that can parse a JSON text.
@@ -41,17 +54,29 @@ export const json_parse = /* @__PURE__ */ (() => {
         t: "\t"
     };
     let text: string;
+    let warnings: ExtendedJsonSyntaxError[];
+
+    const warn = (m: string): void => {
+
+        // Log warning when something is wrong.
+
+        warnings.push({
+            message: m,
+            position: at - 1,
+            severity: "warning"
+        });
+    };
 
     const error = (m: string): never => {
 
         // Call error when something is wrong.
 
         throw {
-            name: "SyntaxError",
+            warnings,
             message: m,
-            at: at,
-            text: text
-        };
+            position: at - 1,
+            severity: "error"
+        } satisfies JsonSyntaxError;
     };
 
     const next = (c?: string): string => {
@@ -102,7 +127,7 @@ export const json_parse = /* @__PURE__ */ (() => {
                 next();
             }
         }
-        const value = +string;
+        const value = Number(string);
         if (!isFinite(value)) {
             error("Bad number");
         }
@@ -196,9 +221,10 @@ export const json_parse = /* @__PURE__ */ (() => {
             white();
             if ((ch as string) === "]") {
                 next("]");
-                return;   // empty array
+                return; // empty array
             }
             while (ch) {
+                value();
                 white();
                 if ((ch as string) === "]") {
                     next("]");
@@ -216,23 +242,25 @@ export const json_parse = /* @__PURE__ */ (() => {
         // Parse an object value.
 
         let key;
-        const obj: Record<string, unknown> = {};
+        const keys = new Set<string>();
 
         if (ch === "{") {
             next("{");
             white();
             if ((ch as string) === "}") {
                 next("}");
-                return;   // empty object
+                return; // empty object
             }
             while (ch) {
                 key = string();
                 white();
                 next(":");
-                if (Object.hasOwnProperty.call(obj, key)) {
-                    error("Duplicate key '" + key + "'");
+                if (keys.has(key)) {
+                    warn("Duplicate key '" + key + "'");
+                } else {
+                    keys.add(key);
                 }
-                obj[key] = value();
+                value();
                 white();
                 if ((ch as string) === "}") {
                     next("}");
@@ -272,12 +300,15 @@ export const json_parse = /* @__PURE__ */ (() => {
 
     return (source: string): void => {
         text = source;
+        warnings = [];
         at = 0;
         ch = " ";
         value();
         white();
         if (ch) {
             error("Syntax error");
+        } else if (warnings.length > 0) {
+            throw {warnings} satisfies JsonSyntaxError;
         }
     };
 })();

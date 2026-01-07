@@ -9,14 +9,14 @@ describe('JSON parsing failures', () => {
 			const data = fs.readFileSync(`test/fails/${file}`, 'utf8'),
 				result = lintJSON(data);
 			assert.strictEqual(result.length, 1);
-			const [error] = result;
-			if ('severity' in error) {
-				assert.strictEqual(result[0].severity, 'error');
-				assert.strictEqual(result[0].line, undefined);
-				assert.strictEqual(result[0].column, undefined);
-			} else {
-				console.log(`\n${data}\n`);
-			}
+			const [{severity, message, line, column, position}] = result;
+			assert.strictEqual(severity, 'error');
+			assert.strictEqual(typeof message, 'string');
+			assert.ok(message.length > 0);
+			const lines = data.slice(0, position).split('\n');
+			assert.strictEqual(lines.length, line);
+			// eslint-disable-next-line es-x/no-array-prototype-at, es-x/no-string-prototype-at
+			assert.strictEqual(lines.at(-1).length + 1, column);
 		});
 	}
 });

@@ -16,22 +16,11 @@ export default [
 	{
 		files: ['src/json_parse.ts'],
 		rules: {
-			'consistent-return': 0,
 			'default-case': 0,
-			'no-else-return': 0,
-			'no-implicit-coercion': 0,
 			'no-unmodified-loop-condition': 0,
-			'object-shorthand': 0,
-			'prefer-const': 0,
 			'prefer-template': 0,
 			'jsdoc/no-bad-blocks': 0,
-			'unicorn/no-negated-condition': 0,
 			'unicorn/prefer-code-point': 0,
-			'unicorn/prefer-ternary': 0,
-			'@stylistic/arrow-parens': [
-				2,
-				'always',
-			],
 			'@stylistic/comma-dangle': [
 				2,
 				'never',
@@ -45,7 +34,6 @@ export default [
 			],
 			'@stylistic/multiline-comment-style': 0,
 			'@stylistic/no-extra-parens': 0,
-			'@stylistic/no-multi-spaces': 0,
 			'@stylistic/padded-blocks': 0,
 			'@stylistic/quotes': [
 				2,

@@ -1,11 +1,12 @@
 import {json_parse} from './json_parse.js';
+import type {JsonSyntaxError, ExtendedJsonSyntaxError} from './json_parse';
 
 declare interface JsonError {
-	severity?: 'error' | 'warning';
+	severity: 'error' | 'warning';
 	message: string;
-	line?: number | null;
-	column?: number | null;
-	position: number | null;
+	line: number;
+	column: number;
+	position: number;
 }
 
 export type RegexGetter<T = string> = (s: T) => RegExp;
@@ -108,7 +109,45 @@ export function getRegex<T extends string | object = string>(f: RegexGetter<T>):
  */
 export const getObjRegex = getRegex;
 
+/**
+ * 按行分割字符串并记录每行的起止位置
+ * @param str 字符串
+ */
+export const splitLines = (str: string): [string, number, number][] => {
+	const lines: [string, number, number][] = [];
+	let start = 0;
+	for (const line of str.split('\n')) {
+		const end = start + line.length;
+		lines.push([line, start, end]);
+		start = end + 1;
+	}
+	return lines;
+};
+
 const mt2num = (mt: RegExpExecArray | null): number | null => mt && Number(mt[1]);
+
+const formatJsonError = (str: string, errors: ExtendedJsonSyntaxError[]): JsonError[] => {
+	let lines: [string, number, number][] | undefined;
+	for (const error of errors) {
+		const {line, column, position} = error;
+		if (position === null || position === undefined) {
+			if (line) {
+				lines ??= splitLines(str);
+				error.column ??= 1;
+				error.position = lines[line - 1]![1] + (error.column - 1);
+			} else {
+				error.position = 0;
+				error.line = 1;
+				error.column = 1;
+			}
+		} else if (!line || !column) {
+			lines ??= splitLines(str);
+			error.line = lines.findIndex(([,, end]) => position <= end) + 1;
+			error.column = position - lines[error.line - 1]![1] + 1;
+		}
+	}
+	return errors as JsonError[];
+};
 
 /**
  * 使用`JSON.parse()`诊断JSON字符串中的语法错误
@@ -124,7 +163,7 @@ export const lintJSONNative = (str: string, force?: boolean): JsonError[] => {
 				line = mt2num(/\bline (\d+)/u.exec(message)),
 				column = mt2num(/\bcolumn (\d+)/u.exec(message)),
 				position = mt2num(/\bposition (\d+)/u.exec(message));
-			return [{message, line, column, position}];
+			return formatJsonError(str, [{message, line, column, position, severity: 'error'}]);
 		}
 	}
 	return [];
@@ -138,22 +177,21 @@ export const lintJSON = (str: string): JsonError[] => {
 	if (!str.trim()) {
 		return [];
 	}
-	const errors: JsonError[] = [];
+	let errors: JsonError[] | undefined;
 	try {
 		json_parse(str);
 	} catch (e) {
 		if (!(e instanceof Error)) {
-			const {message, at} = e as {message: string, at: number},
-				isDuplicate = message.startsWith("Duplicate key '");
-			errors.push({
-				message,
-				position: at - 1,
-				severity: isDuplicate ? 'warning' : 'error',
-			});
-			if (!isDuplicate) {
+			const {warnings, ...error} = e as JsonSyntaxError;
+			if (error.message) {
+				warnings!.push(error as ExtendedJsonSyntaxError);
+			}
+			errors = formatJsonError(str, warnings!);
+			if (error.message) {
 				return errors;
 			}
 		}
 	}
-	return [...lintJSONNative(str, true), ...errors];
+	const nativeErrors = lintJSONNative(str);
+	return errors ? [...nativeErrors, ...errors] : nativeErrors;
 };

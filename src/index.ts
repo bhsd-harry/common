@@ -1,4 +1,4 @@
-import {json_parse} from '../vendor/json_parse.js';
+import {json_parse} from './json_parse.js';
 
 declare interface JsonError {
 	severity?: 'error' | 'warning';

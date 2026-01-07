@@ -21,7 +21,7 @@
 	"sideEffects": false,
 	"scripts": {
 		"prepublishOnly": "npm run build",
-		"build": "tsc && esbuild src/index.ts --charset=utf8 --target=es2024 --format=esm --outfile=dist/index.mjs",
+		"build": "tsc && esbuild src/index.ts --charset=utf8 --target=es2024 --bundle --format=esm --outfile=dist/index.mjs",
 		"lint:ts": "tsc --noEmit && eslint --cache .",
 		"lint": "npm run lint:ts"
 	},

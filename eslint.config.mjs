@@ -14,12 +14,12 @@ export default [
 		},
 	},
 	{
-		files: ['vendor/*.js'],
+		files: ['src/json_parse.ts'],
 		rules: {
 			'consistent-return': 0,
 			'default-case': 0,
+			'no-else-return': 0,
 			'no-implicit-coercion': 0,
-			'no-throw-literal': 0,
 			'no-unmodified-loop-condition': 0,
 			'object-shorthand': 0,
 			'prefer-const': 0,
@@ -27,6 +27,7 @@ export default [
 			'jsdoc/no-bad-blocks': 0,
 			'unicorn/no-negated-condition': 0,
 			'unicorn/prefer-code-point': 0,
+			'unicorn/prefer-ternary': 0,
 			'@stylistic/arrow-parens': [
 				2,
 				'always',
@@ -50,6 +51,9 @@ export default [
 				2,
 				'double',
 			],
+			'@typescript-eslint/no-confusing-void-expression': 0,
+			'@typescript-eslint/no-unnecessary-condition': 0,
+			'@typescript-eslint/only-throw-error': 0,
 		},
 	},
 ];

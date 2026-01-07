@@ -8,56 +8,28 @@
 
     This file creates a json_parse function.
 
-        json_parse(text, reviver)
-            This method parses a JSON text to produce an object or array.
-            It can throw a SyntaxError exception.
+        json_parse(text)
+            This method parses a JSON text and throws a SyntaxError exception.
 
-            The optional reviver parameter is a function that can filter and
-            transform the results. It receives each of the keys and values,
-            and its return value is used instead of the original value.
-            If it returns what it received, then the structure is not modified.
-            If it returns undefined then the member is deleted.
-
-            Example:
-
-            // Parse the text. Values that look like ISO date strings will
-            // be converted to Date objects.
-
-            myData = json_parse(text, function (key, value) {
-                var a;
-                if (typeof value === "string") {
-                    a =
-/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2}(?:\.\d*)?)Z$/.exec(value);
-                    if (a) {
-                        return new Date(Date.UTC(+a[1], +a[2] - 1, +a[3], +a[4],
-                            +a[5], +a[6]));
-                    }
-                }
-                return value;
-            });
-
-    This is a reference implementation. You are free to copy, modify, or
-    redistribute.
+    This is a reference implementation. You are free to copy, modify, or redistribute.
 
     This code should be minified before deployment.
     See http://javascript.crockford.com/jsmin.html
 
-    USE YOUR OWN COPY. IT IS EXTREMELY UNWISE TO LOAD CODE FROM SERVERS YOU DO
-    NOT CONTROL.
+    USE YOUR OWN COPY. IT IS EXTREMELY UNWISE TO LOAD CODE FROM SERVERS YOU DO NOT CONTROL.
 */
 
 export const json_parse = /* @__PURE__ */ (() => {
 
-    // This is a function that can parse a JSON text, producing a JavaScript
-    // data structure. It is a simple, recursive descent parser. It does not use
-    // eval or regular expressions, so it can be used as a model for implementing
-    // a JSON parser in other languages.
+    // This is a function that can parse a JSON text.
+    // It is a simple, recursive descent parser.
+    // It does not use eval or regular expressions,
+    // so it can be used as a model for implementing a JSON parser in other languages.
 
-    // We are defining the function inside of another function to avoid creating
-    // global variables.
+    // We are defining the function inside of another function to avoid creating global variables.
 
-    let at;     // The index of the current character
-    let ch;     // The current character
+    let at: number; // The index of the current character
+    let ch: string; // The current character
     const escapee = {
         "\"": "\"",
         "\\": "\\",
@@ -68,9 +40,9 @@ export const json_parse = /* @__PURE__ */ (() => {
         r: "\r",
         t: "\t"
     };
-    let text;
+    let text: string;
 
-    const error = (m) => {
+    const error = (m: string): never => {
 
         // Call error when something is wrong.
 
@@ -82,7 +54,7 @@ export const json_parse = /* @__PURE__ */ (() => {
         };
     };
 
-    const next = (c) => {
+    const next = (c?: string): string => {
 
         // If a c parameter is provided, verify that it matches the current character.
 
@@ -90,19 +62,17 @@ export const json_parse = /* @__PURE__ */ (() => {
             error("Expected '" + c + "' instead of '" + ch + "'");
         }
 
-        // Get the next character. When there are no more characters,
-        // return the empty string.
+        // Get the next character. When there are no more characters, return the empty string.
 
         ch = text.charAt(at);
         at += 1;
         return ch;
     };
 
-    const number = () => {
+    const number = (): void => {
 
         // Parse a number value.
 
-        let value;
         let string = "";
 
         if (ch === "-") {
@@ -122,8 +92,9 @@ export const json_parse = /* @__PURE__ */ (() => {
         if (ch === "e" || ch === "E") {
             string += ch;
             next();
+            // @ts-expect-error `ch` modified
             if (ch === "-" || ch === "+") {
-                string += ch;
+                string += ch as string;
                 next();
             }
             while (ch >= "0" && ch <= "9") {
@@ -131,22 +102,20 @@ export const json_parse = /* @__PURE__ */ (() => {
                 next();
             }
         }
-        value = +string;
+        const value = +string;
         if (!isFinite(value)) {
             error("Bad number");
-        } else {
-            return value;
         }
     };
 
-    const string = () => {
+    const string = (): string => {
 
         // Parse a string value.
 
-        let hex;
-        let i;
+        let hex: number;
+        let i: number;
         let value = "";
-        let uffff;
+        let uffff: number;
 
         // When parsing for string values, we must look for " and \ characters.
 
@@ -169,19 +138,19 @@ export const json_parse = /* @__PURE__ */ (() => {
                         }
                         value += String.fromCharCode(uffff);
                     } else if (typeof escapee[ch] === "string") {
-                        value += escapee[ch];
+                        value += escapee[ch as keyof typeof escapee];
                     } else {
                         break;
                     }
                 } else {
-                    value += ch;
+                    value += ch as string;
                 }
             }
         }
-        error("Bad string");
+        return error("Bad string");
     };
 
-    const white = () => {
+    const white = (): void => {
 
         // Skip whitespace.
 
@@ -190,7 +159,7 @@ export const json_parse = /* @__PURE__ */ (() => {
         }
     };
 
-    const word = () => {
+    const word = (): void => {
 
         // true, false, or null.
 
@@ -200,45 +169,40 @@ export const json_parse = /* @__PURE__ */ (() => {
             next("r");
             next("u");
             next("e");
-            return true;
+            return;
         case "f":
             next("f");
             next("a");
             next("l");
             next("s");
             next("e");
-            return false;
+            return;
         case "n":
             next("n");
             next("u");
             next("l");
             next("l");
-            return null;
+            return;
         }
         error("Unexpected '" + ch + "'");
     };
 
-    let value;  // Place holder for the value function.
-
-    const array = () => {
+    const array = (): void => {
 
         // Parse an array value.
-
-        const arr = [];
 
         if (ch === "[") {
             next("[");
             white();
-            if (ch === "]") {
+            if ((ch as string) === "]") {
                 next("]");
-                return arr;   // empty array
+                return;   // empty array
             }
             while (ch) {
-                arr.push(value());
                 white();
-                if (ch === "]") {
+                if ((ch as string) === "]") {
                     next("]");
-                    return arr;
+                    return;
                 }
                 next(",");
                 white();
@@ -247,19 +211,19 @@ export const json_parse = /* @__PURE__ */ (() => {
         error("Bad array");
     };
 
-    const object = () => {
+    const object = (): void => {
 
         // Parse an object value.
 
         let key;
-        const obj = {};
+        const obj: Record<string, unknown> = {};
 
         if (ch === "{") {
             next("{");
             white();
-            if (ch === "}") {
+            if ((ch as string) === "}") {
                 next("}");
-                return obj;   // empty object
+                return;   // empty object
             }
             while (ch) {
                 key = string();
@@ -270,9 +234,9 @@ export const json_parse = /* @__PURE__ */ (() => {
                 }
                 obj[key] = value();
                 white();
-                if (ch === "}") {
+                if ((ch as string) === "}") {
                     next("}");
-                    return obj;
+                    return;
                 }
                 next(",");
                 white();
@@ -281,7 +245,7 @@ export const json_parse = /* @__PURE__ */ (() => {
         error("Bad object");
     };
 
-    value = () => {
+    const value = (): unknown => {
 
         // Parse a JSON value. It could be an object, an array, a string, a number,
         // or a word.
@@ -306,7 +270,7 @@ export const json_parse = /* @__PURE__ */ (() => {
     // Return the json_parse function. It will have access to all of the above
     // functions and variables.
 
-    return (source) => {
+    return (source: string): void => {
         text = source;
         at = 0;
         ch = " ";

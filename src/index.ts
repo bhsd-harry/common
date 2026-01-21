@@ -6,6 +6,11 @@ declare interface JsonError {
 	message: string;
 	line: number;
 	column: number;
+	endLine?: number;
+	endColumn?: number;
+	from: number;
+	to?: number;
+	/** @deprecated */
 	position: number;
 }
 
@@ -128,23 +133,33 @@ const mt2num = (mt: RegExpExecArray | null): number | null => mt && Number(mt[1]
 
 const formatJsonError = (str: string, errors: ExtendedJsonSyntaxError[]): JsonError[] => {
 	let lines: [string, number, number][] | undefined;
+	const offsetToPosition = (offset: number): {line: number, column: number} => {
+		lines ??= splitLines(str);
+		const line = lines.findIndex(([,, end]) => offset <= end) + 1;
+		return {
+			line,
+			column: offset - lines[line - 1]![1] + 1,
+		};
+	};
 	for (const error of errors) {
-		const {line, column, position} = error;
-		if (position === null || position === undefined) {
+		const {line, column, from, to} = error;
+		if (from === null || from === undefined) {
 			if (line) {
 				lines ??= splitLines(str);
 				error.column ??= 1;
-				error.position = lines[line - 1]![1] + (error.column - 1);
+				error.from = lines[line - 1]![1] + (error.column - 1);
 			} else {
-				error.position = 0;
+				error.from = 0;
 				error.line = 1;
 				error.column = 1;
 			}
 		} else if (!line || !column) {
-			lines ??= splitLines(str);
-			error.line = lines.findIndex(([,, end]) => position <= end) + 1;
-			error.column = position - lines[error.line - 1]![1] + 1;
+			Object.assign(error, offsetToPosition(from));
 		}
+		if (to !== undefined) {
+			({line: error.endLine, column: error.endColumn} = offsetToPosition(to));
+		}
+		error.position = error.from!;
 	}
 	return errors as JsonError[];
 };
@@ -162,8 +177,8 @@ export const lintJSONNative = (str: string, force?: boolean): JsonError[] => {
 			const {message} = e as SyntaxError,
 				line = mt2num(/\bline (\d+)/u.exec(message)),
 				column = mt2num(/\bcolumn (\d+)/u.exec(message)),
-				position = mt2num(/\bposition (\d+)/u.exec(message));
-			return formatJsonError(str, [{message, line, column, position, severity: 'error'}]);
+				from = mt2num(/\bposition (\d+)/u.exec(message));
+			return formatJsonError(str, [{message, line, column, from, severity: 'error'}]);
 		}
 	}
 	return [];

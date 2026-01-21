@@ -3,8 +3,17 @@ import fs from 'fs';
 import assert from 'assert';
 import {lintJSON, lintJSONNative} from '../dist/index.mjs';
 
+const offsetMsg = new Set(['Bad escaped character', 'Bad control character']);
+
 const isValid = data => {
 	assert.strictEqual(lintJSON(data).length, 0, data);
+};
+
+const match = (data, from, line, column) => {
+	const lines = data.slice(0, from).split('\n');
+	assert.strictEqual(lines.length, line);
+	// eslint-disable-next-line es-x/no-array-prototype-at, es-x/no-string-prototype-at
+	assert.strictEqual(lines.at(-1).length + 1, column);
 };
 
 const isInvalid = (data, s = 'error', n = 1) => {
@@ -17,17 +26,23 @@ const isInvalid = (data, s = 'error', n = 1) => {
 	}
 	const result = lintJSON(data);
 	assert.strictEqual(result.length, n, data);
-	const [{severity, message, line, column, position}] = result;
+	const [{severity, message, line, column, from, to = from, endLine = line, endColumn = column}] = result;
 	assert.strictEqual(severity, s, data);
 	if (s === 'error') {
 		const [e] = lintJSONNative(data);
 		assert.ok(e, data);
-		if (e.message === message) {
-			console.log(`\n${data}\n`);
-		} else if (e.position) {
-			assert.strictEqual(e.position, position, data);
-			assert.strictEqual(e.line, line, data);
-			assert.strictEqual(e.column, column, data);
+		assert.notStrictEqual(e.message, message, data);
+		if (e.from) {
+			if (message.startsWith('Trailing comma in ')) {
+				assert.ok(e.from >= to, data);
+				assert.strictEqual(data.slice(to, e.from).trim(), '', data);
+			} else {
+				const offset = offsetMsg.has(message) ? 1 : 0,
+					newline = data[e.from] === '\n' ? offset : 0;
+				assert.strictEqual(e.from + offset, to, data);
+				assert.strictEqual(e.line + newline, endLine, data);
+				assert.strictEqual(newline ? 1 : e.column + offset, endColumn, data);
+			}
 		}
 	}
 	if (m) {
@@ -36,11 +51,9 @@ const isInvalid = (data, s = 'error', n = 1) => {
 		assert.strictEqual(typeof message, 'string');
 		assert.ok(message.length > 0);
 	}
-	assert.ok(position > 0 || message === 'Unexpected "/"', data);
-	const lines = data.slice(0, position).split('\n');
-	assert.strictEqual(lines.length, line);
-	// eslint-disable-next-line es-x/no-array-prototype-at, es-x/no-string-prototype-at
-	assert.strictEqual(lines.at(-1).length + 1, column);
+	assert.ok(to > 0 || message === 'Unexpected "/"', data);
+	match(data, from, line, column);
+	match(data, to, endLine, endColumn);
 };
 
 describe('JSON Lint', () => {

@@ -31,14 +31,38 @@ export interface JsonSyntaxError {
 	warnings?: ExtendedJsonSyntaxError[];
 	severity?: "error" | "warning";
 	message?: string;
-	position?: number | null;
+	from?: number | null;
+	to?: number;
+	/** @deprecated */
+	position?: number;
 }
 export interface ExtendedJsonSyntaxError extends Omit<JsonSyntaxError, "warnings"> {
 	severity: "error" | "warning";
 	message: string;
 	line?: number | null;
 	column?: number | null;
+	endLine?: number;
+	endColumn?: number;
 }
+
+const escapee = {
+	'"': '"',
+	"\\": "\\",
+	"/": "/",
+	b: "\b",
+	f: "\f",
+	n: "\n",
+	r: "\r",
+	t: "\t",
+};
+const spaces = new Set([" ", "\t", "\n", "\r"]);
+
+const stringify = (c: string): string => {
+	if (c === "") {
+		return "end of input";
+	}
+	return c === '"' ? `'"'` : JSON.stringify(c);
+};
 
 export const json_parse = /* @__PURE__ */ (() => {
 
@@ -51,48 +75,41 @@ export const json_parse = /* @__PURE__ */ (() => {
 
 	let at: number; // The index of the current character
 	let ch: string; // The current character
-	const escapee = {
-		'"': '"',
-		"\\": "\\",
-		"/": "/",
-		b: "\b",
-		f: "\f",
-		n: "\n",
-		r: "\r",
-		t: "\t",
-	};
-	const spaces = new Set([" ", "\t", "\n", "\r"]);
 	let text: string;
 	let warnings: ExtendedJsonSyntaxError[];
 
-	const stringify = (c: string): string => {
-		if (c === "") {
-			return "end of input";
+	const prepareError = (e: JsonSyntaxError, from?: number, to?: number): void => {
+		if (from === undefined) {
+			e.from = at - 1;
+		} else {
+			e.from = from;
+			e.to = to ?? at - 1;
 		}
-		return c === '"' ? `'"'` : JSON.stringify(c);
 	};
 
-	const warn = (m: string): void => {
+	const warn = (message: string, from?: number, to?: number): void => {
 
 		// Log warning when something is wrong.
 
-		warnings.push({
-			message: m,
-			position: at - 1,
+		const warning: ExtendedJsonSyntaxError = {
+			message,
 			severity: "warning",
-		});
+		};
+		prepareError(warning, from, to);
+		warnings.push(warning);
 	};
 
-	const error = (m: string): never => {
+	const error = (message: string, from?: number, to?: number): never => {
 
 		// Call error when something is wrong.
 
-		throw {
+		const e: JsonSyntaxError = {
 			warnings,
-			message: m,
-			position: at - 1,
+			message,
 			severity: "error",
-		} satisfies JsonSyntaxError;
+		};
+		prepareError(e, from, to);
+		throw e;
 	};
 
 	const next = (c?: string): string => {
@@ -106,7 +123,7 @@ export const json_parse = /* @__PURE__ */ (() => {
 		// Get the next character. When there are no more characters, return the empty string.
 
 		ch = text.charAt(at);
-		at += 1;
+		at++;
 		return ch;
 	};
 
@@ -114,8 +131,8 @@ export const json_parse = /* @__PURE__ */ (() => {
 
 		// Parse a number value.
 
-		let value: number | undefined;
 		let string = "";
+		const from = at - 1;
 
 		if (ch === "-") {
 			string = "-";
@@ -136,10 +153,11 @@ export const json_parse = /* @__PURE__ */ (() => {
 			error("No number after minus sign");
 		}
 		if (ch !== "." && ch !== "e" && ch !== "E") {
-			value = Number(string);
+			const value = Number(string);
 			if (!Number.isSafeInteger(value)) {
-				warn("Not a safe integer");
+				warn("Not a safe integer", from);
 			}
+			return;
 		}
 		if (ch === ".") {
 			string += ".";
@@ -165,7 +183,7 @@ export const json_parse = /* @__PURE__ */ (() => {
 				next();
 			}
 		}
-		value ??= Number(string);
+		const value = Number(string);
 		if (!Number.isFinite(value)) {
 			error("Bad number");
 		}
@@ -175,10 +193,7 @@ export const json_parse = /* @__PURE__ */ (() => {
 
 		// Parse a string value.
 
-		let hex: number;
-		let i: number;
 		let value = "";
-		let uffff: number;
 
 		// When parsing for string values, we must look for " and \ characters.
 
@@ -188,28 +203,30 @@ export const json_parse = /* @__PURE__ */ (() => {
 					next();
 					return value;
 				}
+				const from = at - 1;
 				if (ch === "\\") {
 					next();
 					if (ch === "u") {
-						uffff = 0;
-						for (i = 0; i < 4; i++) {
-							hex = parseInt(next(), 16);
+						let i = 0;
+						let uffff = 0;
+						for (; i < 4; i++) {
+							const hex = parseInt(next(), 16);
 							if (!isFinite(hex)) {
 								break;
 							}
 							uffff = uffff * 16 + hex;
 						}
 						if (i < 4) {
-							error("Bad unicode escape");
+							error("Bad unicode escape", from);
 						}
 						value += String.fromCharCode(uffff);
 					} else if (typeof escapee[ch] === "string") {
 						value += escapee[ch as keyof typeof escapee];
 					} else {
-						error("Bad escaped character");
+						error("Bad escaped character", from, at);
 					}
 				} else if ((ch as string) < " ") {
-					error("Bad control character");
+					error("Bad control character", from, at);
 				} else {
 					value += ch as string;
 				}
@@ -262,15 +279,16 @@ export const json_parse = /* @__PURE__ */ (() => {
 
 		// Parse an array value.
 
-		next("[");
+		next();
 		white();
 		if (ch === "]") {
 			next();
 			return; // empty array
 		}
+		let from: number | undefined;
 		while (ch) {
 			if (ch === "]") {
-				error("Trailing comma in array");
+				error("Trailing comma in array", from, from! + 1);
 			}
 			value();
 			white();
@@ -278,6 +296,7 @@ export const json_parse = /* @__PURE__ */ (() => {
 				next();
 				return;
 			} else if (ch === ",") {
+				from = at - 1;
 				next();
 				white();
 			} else {
@@ -291,24 +310,26 @@ export const json_parse = /* @__PURE__ */ (() => {
 
 		// Parse an object value.
 
-		let key;
 		const keys = new Set<string>();
 
-		next("{");
+		next();
 		white();
 		if (ch === "}") {
 			next();
 			return; // empty object
 		}
+		let from: number | undefined;
 		while (ch) {
 			if (ch === "}") {
-				error("Trailing comma in object");
+				error("Trailing comma in object", from, from! + 1);
 			}
-			key = string();
+			from = at;
+			const key = string();
+			const to = at - 2;
 			white();
 			next(":");
 			if (keys.has(key)) {
-				warn(`Duplicate key ${stringify(key)}`);
+				warn(`Duplicate key ${stringify(key)}`, from, to);
 			} else {
 				keys.add(key);
 			}
@@ -318,6 +339,7 @@ export const json_parse = /* @__PURE__ */ (() => {
 				next();
 				return;
 			} else if (ch === ",") {
+				from = at - 1;
 				next();
 				white();
 			} else {

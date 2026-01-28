@@ -1,4 +1,4 @@
-import {json_parse} from './json_parse.js';
+import {json_parse, jsonc_parse} from './json_parse.js';
 import type {JsonSyntaxError, ExtendedJsonSyntaxError} from './json_parse';
 
 declare interface JsonError {
@@ -185,6 +185,21 @@ export const lintJSONNative = (str: string, force?: boolean): JsonError[] => {
 	return [];
 };
 
+const lintJSONBase = (str: string, parse: (s: string) => void): JsonError[] => {
+	try {
+		parse(str);
+	} catch (e) {
+		if (!(e instanceof Error)) {
+			const {warnings, ...error} = e as JsonSyntaxError;
+			if (error.message) {
+				warnings.push(error as ExtendedJsonSyntaxError);
+			}
+			return formatJsonError(str, warnings);
+		}
+	}
+	return [];
+};
+
 /**
  * 诊断JSON字符串中的语法错误
  * @param str JSON字符串
@@ -193,21 +208,12 @@ export const lintJSON = (str: string): JsonError[] => {
 	if (!str.trim()) {
 		return [];
 	}
-	let errors: JsonError[] | undefined;
-	try {
-		json_parse(str);
-	} catch (e) {
-		if (!(e instanceof Error)) {
-			const {warnings, ...error} = e as JsonSyntaxError;
-			if (error.message) {
-				warnings!.push(error as ExtendedJsonSyntaxError);
-			}
-			errors = formatJsonError(str, warnings!);
-			if (error.message) {
-				return errors;
-			}
-		}
-	}
-	const nativeErrors = lintJSONNative(str);
-	return errors ? [...nativeErrors, ...errors] : nativeErrors;
+	const errors = lintJSONBase(str, json_parse);
+	return errors[errors.length - 1]?.severity === 'error' ? errors : [...errors, ...lintJSONNative(str)];
 };
+
+/**
+ * 诊断JSONC字符串中的语法错误
+ * @param str JSONC字符串
+ */
+export const lintJSONC = (str: string): JsonError[] => str.trim() ? lintJSONBase(str, jsonc_parse) : [];

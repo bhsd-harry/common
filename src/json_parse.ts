@@ -28,7 +28,7 @@
 */
 
 export interface JsonSyntaxError {
-	warnings?: ExtendedJsonSyntaxError[];
+	warnings: ExtendedJsonSyntaxError[];
 	severity?: "error" | "warning";
 	message?: string;
 	from?: number | null;
@@ -64,7 +64,7 @@ const stringify = (c: string): string => {
 	return c === '"' ? `'"'` : JSON.stringify(c);
 };
 
-export const json_parse = /* @__PURE__ */ (() => {
+const factory = (jsonc?: boolean) => {
 
 	// This is a function that can parse a JSON text.
 	// It is a simple, recursive descent parser.
@@ -78,7 +78,7 @@ export const json_parse = /* @__PURE__ */ (() => {
 	let text: string;
 	let warnings: ExtendedJsonSyntaxError[];
 
-	const prepareError = (e: JsonSyntaxError, from?: number, to?: number): void => {
+	const prepareError = (e: Partial<JsonSyntaxError>, from?: number, to?: number): void => {
 		if (from === undefined) {
 			e.from = at - 1;
 		} else {
@@ -239,10 +239,48 @@ export const json_parse = /* @__PURE__ */ (() => {
 
 	const white = (): void => {
 
-		// Skip whitespace.
+		// Skip whitespace and comments (JSONC).
 
-		while (ch && spaces.has(ch)) {
-			next();
+		while (ch) {
+
+			// Skip whitespace.
+
+			while (ch && spaces.has(ch)) {
+				next();
+			}
+
+			if (jsonc && ch === "/") {
+				const peek = text.charAt(at);
+				if (peek === "/") {
+
+					// Skip single-line comments.
+
+					next(); // skip /
+					next(); // skip /
+					// @ts-expect-error `ch` modified
+					while (ch && ch !== "\n" && ch !== "\r") {
+						next();
+					}
+					continue;
+				} else if (peek === "*") {
+
+					// Skip multi-line comments.
+
+					next(); // skip /
+					next(); // skip *
+					// @ts-expect-error `ch` modified
+					while (ch && !(ch === "*" && text.charAt(at) === "/")) {
+						next();
+					}
+					if (ch === "*") {
+						next(); // skip *
+						next(); // skip /
+					}
+					continue;
+				}
+			}
+
+			break;
 		}
 	};
 
@@ -284,10 +322,19 @@ export const json_parse = /* @__PURE__ */ (() => {
 		if (ch === "]") {
 			next();
 			return; // empty array
+		} else if (jsonc && ch === ",") {
+			next();
+			white();
+			next("]");
+			return;
 		}
 		let from: number | undefined;
 		while (ch) {
 			if (ch === "]") {
+				if (jsonc) {
+					next();
+					return;
+				}
 				error("Trailing comma in array", from, from! + 1);
 			}
 			value();
@@ -317,10 +364,19 @@ export const json_parse = /* @__PURE__ */ (() => {
 		if (ch === "}") {
 			next();
 			return; // empty object
+		} else if (jsonc && ch === ",") {
+			next();
+			white();
+			next("}");
+			return;
 		}
 		let from: number | undefined;
 		while (ch) {
 			if (ch === "}") {
+				if (jsonc) {
+					next();
+					return;
+				}
 				error("Trailing comma in object", from, from! + 1);
 			}
 			from = at;
@@ -356,6 +412,8 @@ export const json_parse = /* @__PURE__ */ (() => {
 
 		white();
 		switch (ch) {
+			case "":
+				return undefined;
 			case "{":
 				return object();
 			case "[":
@@ -387,4 +445,7 @@ export const json_parse = /* @__PURE__ */ (() => {
 			throw {warnings} satisfies JsonSyntaxError;
 		}
 	};
-})();
+};
+
+export const json_parse = /* @__PURE__ */ factory(),
+	jsonc_parse = /* @__PURE__ */ factory(true);

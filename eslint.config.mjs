@@ -11,7 +11,10 @@ export default [
 			camelcase: [
 				2,
 				{
-					allow: ['json_parse'],
+					allow: [
+						'json_parse',
+						'jsonc_parse',
+					],
 				},
 			],
 		},

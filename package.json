@@ -1,6 +1,6 @@
 {
 	"name": "@bhsd/common",
-	"version": "1.4.0",
+	"version": "2.0.0",
 	"homepage": "https://github.com/bhsd-harry/common#readme",
 	"bugs": {
 		"url": "https://github.com/bhsd-harry/common/issues"
@@ -9,21 +9,15 @@
 	"author": "Bhsd",
 	"files": [
 		"/dist/*.js",
-		"/dist/index.mjs",
 		"/dist/index.d.ts"
 	],
-	"exports": {
-		".": {
-			"types": "./dist/index.d.ts",
-			"import": "./dist/index.mjs",
-			"require": "./dist/index.js"
-		}
-	},
+	"main": "./dist/index.js",
 	"types": "./dist/index.d.ts",
+	"type": "module",
 	"sideEffects": false,
 	"scripts": {
 		"prepublishOnly": "npm run build",
-		"build": "tsc && esbuild src/index.ts --charset=utf8 --target=es2024 --bundle --format=esm --outfile=dist/index.mjs && cp dist/index.d.ts dist/index.d.mts",
+		"build": "tsc",
 		"lint:ts": "tsc --noEmit && eslint --cache .",
 		"lint": "npm run lint:ts",
 		"test": "mocha"
@@ -47,6 +41,6 @@
 		"typescript": "^5.9.3"
 	},
 	"engines": {
-		"node": ">=20.19.0"
+		"node": "^20.19.0 || ^22.13.0 || >=24.11.0"
 	}
 }

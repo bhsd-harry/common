@@ -84,7 +84,7 @@ export const splitColors = (str: string, hsl = true): [string, number, number, b
  */
 export const sanitizeInlineStyle = (style: string): string =>
 	style.replace(/[{}]/gu, p => p === '{' ? '｛' : '｝')
-		.replace(/^[\s;]+/u, p => p.replace(/;/gu, ' '));
+		.replace(/^[\s;]+/u, p => p.replaceAll(';', ' '));
 
 /**
  * 缓存生成的正则表达式

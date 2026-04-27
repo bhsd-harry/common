@@ -26,11 +26,17 @@ export const rawurldecode = (str: string): string =>
 	decodeURIComponent(str.replace(/%(?![\da-f]{2})/giu, '%25'));
 
 /**
+ * 将0~255之间的整数转换为十六进制
+ * @param d 0~255之间的整数
+ */
+export const intToHex = (d: number): string =>
+	Math.round(d).toString(16).padStart(2, '0');
+
+/**
  * 将0~1之间的数字转换为十六进制
  * @param d 0~1之间的数字
  */
-export const numToHex = (d: number): string =>
-	Math.round(d * 255).toString(16).padStart(2, '0');
+export const numToHex = (d: number): string => intToHex(d * 255);
 
 const regex = /* #__PURE__ */ (() => {
 	const hexColor = String.raw`#(?:[\da-f]{3,4}|(?:[\da-f]{2}){3,4})(?![\p{L}\p{N}_])`,

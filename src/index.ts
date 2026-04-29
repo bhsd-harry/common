@@ -223,3 +223,9 @@ export const lintJSON = (str: string): JsonError[] => {
  * @param str JSONC字符串
  */
 export const lintJSONC = (str: string): JsonError[] => str.trim() ? lintJSONBase(str, jsonc_parse) : [];
+
+/**
+ * 获取字符串开头的空白字符数量
+ * @param str 字符串
+ */
+export const numLeadingSpaces = (str: string): number => str.search(/\S|$/u);

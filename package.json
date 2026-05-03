@@ -1,6 +1,6 @@
 {
 	"name": "@bhsd/common",
-	"version": "2.2.0",
+	"version": "2.2.1",
 	"homepage": "https://github.com/bhsd-harry/common#readme",
 	"bugs": {
 		"url": "https://github.com/bhsd-harry/common/issues"
@@ -24,7 +24,7 @@
 		"test": "mocha"
 	},
 	"devDependencies": {
-		"@bhsd/code-standard": "^2.4.0",
+		"@bhsd/code-standard": "^2.4.1",
 		"@eslint-community/eslint-plugin-eslint-comments": "^4.7.1",
 		"@stylistic/eslint-plugin": "^5.10.0",
 		"@types/mocha": "^10.0.10",

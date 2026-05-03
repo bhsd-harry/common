@@ -227,5 +227,6 @@ export const lintJSONC = (str: string): JsonError[] => str.trim() ? lintJSONBase
 /**
  * 获取字符串开头的空白字符数量
  * @param str 字符串
+ * @param re 其他正则表达式，默认为匹配非空白字符的正则表达式
  */
-export const numLeadingSpaces = (str: string): number => str.search(/\S|$/u);
+export const numLeadingSpaces = (str: string, re = /\S|$/u): number => str.search(re);

@@ -23,6 +23,7 @@ export const wmf = 'wiktionary|wiki(?:pedia|books|news|quote|source|versity|voya
  * @param str 要解码的字符串
  */
 export const rawurldecode = (str: string): string =>
+	// eslint-disable-next-line unicorn/prefer-string-replace-all
 	decodeURIComponent(str.replace(/%(?![\da-f]{2})/giu, '%25'));
 
 /**
@@ -43,9 +44,9 @@ const regex = /* #__PURE__ */ (() => {
 		rgbValue = String.raw`(?:\d*\.)?\d+%?`,
 		hue = String.raw`(?:\d*\.)?\d+(?:deg|grad|rad|turn)?`,
 		rgbColor = String.raw`rgba?\(\s*(?:${
-			String.raw`${new Array(3).fill(rgbValue).join(String.raw`\s+`)}(?:\s*\/\s*${rgbValue})?`
+			String.raw`${Array.from({length: 3}, () => rgbValue).join(String.raw`\s+`)}(?:\s*\/\s*${rgbValue})?`
 		}|${
-			String.raw`${new Array(3).fill(rgbValue).join(String.raw`\s*,\s*`)}(?:\s*,\s*${rgbValue})?`
+			String.raw`${Array.from({length: 3}, () => rgbValue).join(String.raw`\s*,\s*`)}(?:\s*,\s*${rgbValue})?`
 		})\s*\)`,
 		hslColor = String.raw`hsla?\(\s*(?:${
 			String.raw`${hue}\s+${rgbValue}\s+${rgbValue}(?:\s*\/\s*${rgbValue})?`
@@ -89,7 +90,7 @@ export const splitColors = (str: string, hsl = true): [string, number, number, b
  * @param style 内联样式
  */
 export const sanitizeInlineStyle = (style: string): string =>
-	style.replace(/[{}]/gu, p => p === '{' ? '｛' : '｝')
+	style.replaceAll(/[{}]/gu, p => p === '{' ? '｛' : '｝')
 		.replace(/^[\s;]+/u, p => p.replaceAll(';', ' '));
 
 /**
@@ -215,6 +216,7 @@ export const lintJSON = (str: string): JsonError[] => {
 		return [];
 	}
 	const errors = lintJSONBase(str, json_parse);
+	// eslint-disable-next-line unicorn/prefer-at
 	return errors[errors.length - 1]?.severity === 'error' ? errors : [...errors, ...lintJSONNative(str)];
 };
 

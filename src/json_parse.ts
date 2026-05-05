@@ -447,5 +447,5 @@ const factory = (jsonc?: boolean) => {
 	};
 };
 
-export const json_parse = /* @__PURE__ */ factory(),
-	jsonc_parse = /* @__PURE__ */ factory(true);
+export const json_parse = /* #__PURE__ */ factory(),
+	jsonc_parse = /* #__PURE__ */ factory(true);

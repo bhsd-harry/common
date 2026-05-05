@@ -1,13 +1,23 @@
-/* global describe, it */
 import fs from 'fs';
+import path from 'path';
 import assert from 'assert';
-import {lintJSON, lintJSONNative, lintJSONC} from '../dist/index.mjs';
+import {jsonLanguage, jsoncLanguage} from '@bhsd/lezer-json';
+import {lintJSON, lintJSONNative, lintJSONC} from '../dist/index.js';
 
-const offsetMsg = new Set(['Bad escaped character', 'Bad control character']);
+const offsetMsg = new Set(['Bad escaped character', 'Bad control character']),
+	jsonParser = jsonLanguage.parser.configure({strict: true}),
+	jsoncParser = jsoncLanguage.parser.configure({strict: true});
+
+const isValidForLezer = (data, jsonc) => {
+	if ((jsonc ? data.replaceAll(/\/\/.*|\/\*[\s\S]*?(?:\*\/|$)/gu, '') : data).trim()) {
+		(jsonc ? jsoncParser : jsonParser).parse(data);
+	}
+};
 
 const isValid = (data, jsonc = false) => {
 	assert.strictEqual(typeof jsonc, 'boolean');
 	assert.strictEqual((jsonc ? lintJSONC : lintJSON)(data).length, 0, data);
+	isValidForLezer(data, jsonc);
 };
 
 const match = (data, from, line, column) => {
@@ -57,12 +67,22 @@ const isInvalid = (data, s = 'error', jsonc = false, n = 1) => {
 	assert.ok(to > 0 || message === 'Unexpected "/"', data);
 	match(data, from, line, column);
 	match(data, to, endLine, endColumn);
+	if (s === 'warning') {
+		isValidForLezer(data, jsonc);
+	} else if (jsonc) {
+		try {
+			jsoncParser.parse(data);
+			assert.fail('Expected Lezer parser to fail');
+		} catch (e) {
+			assert.ok(e instanceof SyntaxError, data);
+		}
+	}
 };
 
 describe('JSON Lint', () => {
-	for (const file of fs.readdirSync('test/passes')) {
-		it(file, () => {
-			const data = fs.readFileSync(`test/passes/${file}`, 'utf8');
+	for (const file of fs.globSync('test/passes/*.json')) {
+		it(path.basename(file), () => {
+			const data = fs.readFileSync(file, 'utf8');
 			isValid(data);
 		});
 	}

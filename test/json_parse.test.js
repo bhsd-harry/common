@@ -140,7 +140,7 @@ describe('vscode-json-languageservice for JSON', () => {
 
 	it('No content', () => {
 		isValid('');
-		isValid('   ');
+		isValid(' '.repeat(3));
 		isValid('\n\n');
 		isInvalid('/*hello*/  ', 'Unexpected "/"');
 	});

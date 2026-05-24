@@ -16,6 +16,8 @@ declare interface JsonError {
 
 export type RegexGetter<T = string> = (s: T) => RegExp;
 
+export {splitColors, rgba, namedColors} from './color.js';
+
 export const wmf = 'wiktionary|wiki(?:pedia|books|news|quote|source|versity|voyage)';
 
 /**
@@ -38,52 +40,6 @@ export const intToHex = (d: number): string =>
  * @param d 0~1之间的数字
  */
 export const numToHex = (d: number): string => intToHex(d * 255);
-
-const regex = /* #__PURE__ */ (() => {
-	const hexColor = String.raw`#(?:[\da-f]{3,4}|(?:[\da-f]{2}){3,4})(?![\p{L}\p{N}_])`,
-		rgbValue = String.raw`(?:\d*\.)?\d+%?`,
-		hue = String.raw`(?:\d*\.)?\d+(?:deg|grad|rad|turn)?`,
-		rgbColor = String.raw`rgba?\(\s*(?:${
-			String.raw`${Array.from({length: 3}, () => rgbValue).join(String.raw`\s+`)}(?:\s*\/\s*${rgbValue})?`
-		}|${
-			String.raw`${Array.from({length: 3}, () => rgbValue).join(String.raw`\s*,\s*`)}(?:\s*,\s*${rgbValue})?`
-		})\s*\)`,
-		hslColor = String.raw`hsla?\(\s*(?:${
-			String.raw`${hue}\s+${rgbValue}\s+${rgbValue}(?:\s*\/\s*${rgbValue})?`
-		}|${
-			String.raw`${hue}${String.raw`\s*,\s*(?:\d*\.)?\d+%`.repeat(2)}(?:\s*,\s*${rgbValue})?`
-		})\s*\)`;
-	return {
-		full: new RegExp(String.raw`(^|[^\p{L}\p{N}_])(${hexColor}|${rgbColor}|${hslColor})`, 'giu'),
-		rgb: new RegExp(String.raw`(^|[^\p{L}\p{N}_])(${hexColor}|${rgbColor})`, 'giu'),
-	};
-})();
-
-/**
- * 包含颜色时断开字符串
- * @param str 字符串
- * @param hsl 是否包含 HSL
- */
-export const splitColors = (str: string, hsl = true): [string, number, number, boolean][] => {
-	const pieces: [string, number, number, boolean][] = [],
-		re = regex[hsl ? 'full' : 'rgb'];
-	re.lastIndex = 0;
-	let mt = re.exec(str),
-		lastIndex = 0;
-	while (mt) {
-		const index = mt.index + mt[1]!.length;
-		if (index > lastIndex) {
-			pieces.push([str.slice(lastIndex, index), lastIndex, index, false]);
-		}
-		({lastIndex} = re);
-		pieces.push([mt[2]!, index, lastIndex, str[index - 1] !== '&' || !/^#\d+$/u.test(mt[2]!)]);
-		mt = re.exec(str);
-	}
-	if (str.length > lastIndex) {
-		pieces.push([str.slice(lastIndex), lastIndex, str.length, false]);
-	}
-	return pieces;
-};
 
 /**
  * 清理内联样式中的`{`和`}`

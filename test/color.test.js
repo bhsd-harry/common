@@ -1,0 +1,327 @@
+import assert from 'assert';
+import {rgba, namedColors} from '../dist/color.js';
+
+const parse = color => {
+		const result = rgba(color, namedColors);
+		if (!result) {
+			return false;
+		}
+		const {r, g, b, a} = result.toRgb();
+		return {
+			values: [r, g, b],
+			alpha: a,
+		};
+	},
+	colorRgba = color => {
+		const result = rgba(color, namedColors);
+		if (!result) {
+			return [];
+		}
+		const {r, g, b, a} = result.toRgb();
+		return [r, g, b, a];
+	};
+
+/**
+ * @author Dmitry Ivanov <df.creative@gmail.com>
+ * @license MIT
+ * @see https://github.com/colorjs/color-parse/blob/master/test.js
+ */
+describe('color-parse tests', () => {
+	it('#ffa500', () => {
+		assert.deepStrictEqual(parse('#ffa500'), {
+			values: [255, 165, 0],
+			alpha: 1,
+		});
+	});
+	it('#333', () => {
+		assert.deepStrictEqual(parse('#333'), {
+			values: [51, 51, 51],
+			alpha: 1,
+		});
+	});
+	it('#f98', () => {
+		assert.deepStrictEqual(parse('#f98'), {
+			values: [255, 153, 136],
+			alpha: 1,
+		});
+	});
+	it('lime', () => {
+		assert.deepStrictEqual(parse('lime'), {
+			values: [0, 255, 0],
+			alpha: 1,
+		});
+		assert.deepStrictEqual(parse('LIME'), {
+			values: [0, 255, 0],
+			alpha: 1,
+		});
+	});
+	it('hsl(210,50,50)', () => {
+		assert.deepStrictEqual(parse('hsl(210,50,50)'), false);
+	});
+	it('rgba(153,50,204,60%)', () => {
+		assert.deepStrictEqual(parse('rgba(153,50,204,60%)'), {
+			values: [153, 50, 204],
+			alpha: 0.6,
+		});
+	});
+
+	it('#fef', () => {
+		assert.deepStrictEqual(parse('#fef'), {
+			values: [255, 238, 255],
+			alpha: 1,
+		});
+	});
+	it('#fffFEF', () => {
+		assert.deepStrictEqual(parse('#fffFEF'), {
+			values: [255, 255, 239],
+			alpha: 1,
+		});
+	});
+	it('rgb(244, 233, 100)', () => {
+		assert.deepStrictEqual(parse('rgb(244, 233, 100)'), {
+			values: [244, 233, 100],
+			alpha: 1,
+		});
+	});
+	it('rgb(100%, 30%, 90%)', () => {
+		assert.deepStrictEqual(parse('rgb(100%, 30%, 90%)'), {
+			values: [255, 77, 229],
+			alpha: 1,
+		});
+	});
+	it('transparent', () => {
+		assert.deepStrictEqual(parse('transparent'), {
+			values: [0, 0, 0],
+			alpha: 0,
+		});
+	});
+	it('hsl(240, 100%, 50.5%)', () => {
+		assert.deepStrictEqual(parse('hsl(240, 100%, 50.5%)'), {
+			values: [3, 3, 255],
+			alpha: 1,
+		});
+	});
+	it('hsl(240deg, 100%, 50.5%)', () => {
+		assert.deepStrictEqual(parse('hsl(240deg, 100%, 50.5%)'), {
+			values: [3, 3, 255],
+			alpha: 1,
+		});
+	});
+	it('hwb(240, 100%, 50.5%)', () => {
+		assert.deepStrictEqual(parse('hwb(240, 100%, 50.5%)'), false);
+	});
+	it('hwb(240deg, 100%, 50.5%)', () => {
+		assert.deepStrictEqual(parse('hwb(240deg, 100%, 50.5%)'), false);
+	});
+	it('blue', () => {
+		assert.deepStrictEqual(parse('blue'), {
+			values: [0, 0, 255],
+			alpha: 1,
+		});
+		assert.deepStrictEqual(parse('BLUE'), {
+			values: [0, 0, 255],
+			alpha: 1,
+		});
+	});
+	it('rgba(244, 233, 100, 0.5)', () => {
+		assert.deepStrictEqual(parse('rgba(244, 233, 100, 0.5)'), {
+			values: [244, 233, 100],
+			alpha: 0.5,
+		});
+	});
+	it('hsla(244, 100%, 100%, 0.6)', () => {
+		assert.deepStrictEqual(parse('hsla(244, 100%, 100%, 0.6)'), {
+			values: [255, 255, 255],
+			alpha: 0.6,
+		});
+	});
+	it('hwb(244, 100%, 100%, 0.6)', () => {
+		assert.deepStrictEqual(parse('hwb(244, 100%, 100%, 0.6)'), false);
+	});
+	it('hwb(244, 100%, 100%)', () => {
+		assert.deepStrictEqual(parse('hwb(244, 100%, 100%)'), false);
+	});
+	it('rgba(200, 20, 233, 0.2)', () => {
+		assert.deepStrictEqual(parse('rgba(200, 20, 233, 0.2)'), {
+			values: [200, 20, 233],
+			alpha: 0.2,
+		});
+	});
+	it('rgba(200, 20, 233, 0)', () => {
+		assert.deepStrictEqual(parse('rgba(200, 20, 233, 0)'), {
+			values: [200, 20, 233],
+			alpha: 0,
+		});
+	});
+	it('rgba(100%, 30%, 90%, 0.2)', () => {
+		assert.deepStrictEqual(parse('rgba(100%, 30%, 90%, 0.2)'), {
+			values: [255, 77, 229],
+			alpha: 0.2,
+		});
+	});
+	it('rgba(200 20 233 / 0.2)', () => {
+		assert.deepStrictEqual(parse('rgba(200 20 233 / 0.2)'), {
+			values: [200, 20, 233],
+			alpha: 0.2,
+		});
+	});
+	it('rgba(200 20 233 / 20%)', () => {
+		assert.deepStrictEqual(parse('rgba(200 20 233 / 20%)'), {
+			values: [200, 20, 233],
+			alpha: 0.2,
+		});
+	});
+	it('hsla(200, 20%, 33%, 0.2)', () => {
+		assert.deepStrictEqual(parse('hsla(200, 20%, 33%, 0.2)'), {
+			values: [67, 90, 101],
+			alpha: 0.2,
+		});
+	});
+	it('hwb(200, 20%, 33%, 0.2)', () => {
+		assert.deepStrictEqual(parse('hwb(200, 20%, 33%, 0.2)'), false);
+	});
+
+	it('rgba(300, 600, 100, 3)', () => {
+		assert.deepStrictEqual(parse('rgba(300, 600, 100, 3)'), {
+			values: [255, 255, 100],
+			alpha: 1,
+		});
+	});
+	it('rgba(8000%, 100%, 333%, 88)', () => {
+		assert.deepStrictEqual(parse('rgba(8000%, 100%, 333%, 88)'), {
+			values: [255, 255, 255],
+			alpha: 1,
+		});
+	});
+	it('hsla(400, 10%, 200%, 10)', () => {
+		assert.deepStrictEqual(parse('hsla(400, 10%, 200%, 10)'), {
+			values: [255, 255, 255],
+			alpha: 1,
+		});
+	});
+	it('hwb(400, 10%, 200%, 10)', () => {
+		assert.deepStrictEqual(parse('hwb(400, 10%, 200%, 10)'), false);
+	});
+	it('yellowblue', () => {
+		assert.deepStrictEqual(parse('yellowblue'), false);
+		assert.deepStrictEqual(parse('YELLOWBLUE'), false);
+	});
+
+	it('hsla(101.12, 45.2%, 21.0%, 1.0)', () => {
+		assert.deepStrictEqual(parse('hsla(101.12, 45.2%, 21.0%, 1.0)'), {
+			values: [45, 78, 29],
+			alpha: 1,
+		});
+	});
+	it('hsla(101.12 45.2% 21.0% / 50%)', () => {
+		assert.deepStrictEqual(parse('hsla(101.12 45.2% 21.0% / 50%)'), {
+			values: [45, 78, 29],
+			alpha: 0.5,
+		});
+	});
+	it('hsl(red, 10%, 10%)', () => {
+		assert.deepStrictEqual(parse('hsl(red, 10%, 10%)'), false);
+	});
+	it('hsl(10deg, 10%, 10%)', () => {
+		assert.deepStrictEqual(parse('hsl(10deg, 10%, 10%)'), {
+			values: [28, 24, 23],
+			alpha: 1,
+		});
+	});
+	it('hsl(1.5turn, 10%, 10%)', () => {
+		assert.deepStrictEqual(parse('hsl(1.5turn, 10%, 10%)'), {
+			values: [23, 28, 28],
+			alpha: 1,
+		});
+	});
+	it('lch(5, 5, orange)', () => {
+		assert.deepStrictEqual(parse('lch(5, 5, orange)'), false);
+	});
+	it('lch(5 5 orange / .5)', () => {
+		assert.deepStrictEqual(parse('lch(5 5 orange / .5)'), false);
+	});
+	it('lab(0.25, 0.25, 0.25)', () => {
+		assert.deepStrictEqual(parse('lab(0.25, 0.25, 0.25)'), false);
+	});
+	it('lab(0.25 0.25 0.25 / 0.5)', () => {
+		assert.deepStrictEqual(parse('lab(0.25 0.25 0.25 / 0.5)'), false);
+	});
+
+	it('color(...)', () => {
+		// --srgb: color(srgb 1 1 1);
+		assert.deepStrictEqual(parse('color(srgb-linear 1 1 1)'), false);
+		// --srgb-linear: color(srgb-linear 100% 100% 100% / 50%);
+		assert.deepStrictEqual(parse('color(srgb-linear 100% 100% 100% / 50%)'), false);
+		// --display-p3: color(display-p3 1 1 1);
+		assert.deepStrictEqual(parse('color(display-p3 1 1 1)'), false);
+		// --rec2020: color(rec2020 0 0 0);
+		assert.deepStrictEqual(parse('color(rec2020 0 0 0)'), false);
+		// --a98-rgb: color(a98-rgb 1 1 1 / 25%);
+		assert.deepStrictEqual(parse('color(a98-rgb 1 1 1 / 25%)'), false);
+		// --prophoto: color(prophoto-rgb 0% 0% 0%);
+		assert.deepStrictEqual(parse('color(prophoto-rgb 0% 0% 0%)'), false);
+		// --xyz: color(xyz 1 1 1);
+		assert.deepStrictEqual(parse('color(xyz 1 1 1)'), false);
+	});
+
+	it('oklab', () => {
+		assert.deepStrictEqual(parse('oklab(40.1% 0.1143 0.045)'), false);
+		assert.deepStrictEqual(parse('oklab(59.69% 0.1007 -0.1191 / 0.5)'), false);
+		assert.deepStrictEqual(parse('oklab(0.123 100% -100% / 2)'), false);
+		assert.deepStrictEqual(parse('oklab(none none none / none)'), false);
+	});
+	it('oklch', () => {
+		assert.deepStrictEqual(parse('oklch(40.1% 0.1143 0.045)'), false);
+		assert.deepStrictEqual(parse('oklch(59.69% 10% 49.77 / 0.5)'), false);
+		assert.deepStrictEqual(parse('oklch(40.1% 0.156 49.1% / .5)'), false);
+		assert.deepStrictEqual(parse('oklch(none none none / none)'), false);
+	});
+
+	it('#afd6', () => {
+		assert.deepStrictEqual(parse('#afd6'), {
+			values: [170, 255, 221],
+			alpha: 0.4,
+		});
+	});
+	it('#AFD6', () => {
+		assert.deepStrictEqual(parse('#AFD6'), {
+			values: [170, 255, 221],
+			alpha: 0.4,
+		});
+	});
+	it('#aaffdd66', () => {
+		assert.deepStrictEqual(parse('#aaffdd66'), {
+			values: [170, 255, 221],
+			alpha: 0.4,
+		});
+	});
+	it('#AAFFDD66', () => {
+		assert.deepStrictEqual(parse('#AAFFDD66'), {
+			values: [170, 255, 221],
+			alpha: 0.4,
+		});
+	});
+});
+
+/**
+ * @author Dmitry Iv <dfcreative@gmail.com>
+ * @license MIT
+ * @see https://github.com/colorjs/color-rgba/blob/master/test.js
+ */
+it('color-rgba tests', () => {
+	assert.deepStrictEqual(colorRgba('rgba(1,2,3,.5)'), [1, 2, 3, 0.5]);
+	assert.deepStrictEqual(colorRgba('rgba(0,0,0,0)'), [0, 0, 0, 0]);
+	assert.deepStrictEqual(colorRgba('hsla(0,0,0,1)'), []);
+	assert.deepStrictEqual(colorRgba('rgba(-300,-300,-300,-1)'), [0, 0, 0, 0]);
+
+	assert.deepStrictEqual(colorRgba('red'), [255, 0, 0, 1]);
+	assert.deepStrictEqual(colorRgba('rgb(80, 120, 160)'), [80, 120, 160, 1]);
+	assert.deepStrictEqual(colorRgba('rgba(80, 120, 160, .5)'), [80, 120, 160, 0.5]);
+	assert.deepStrictEqual(colorRgba('rgba(80 120 160 / .5)'), [80, 120, 160, 0.5]);
+	assert.deepStrictEqual(colorRgba('hsl(291 80% 50%)'), [199, 26, 230, 1]);
+	assert.deepStrictEqual(colorRgba('hsl(0.8083333333333333turn 80% 50%)'), [199, 26, 230, 1]);
+	assert.deepStrictEqual(colorRgba('hsla(109, 50%, 50%, .75)'), [87, 191, 64, 0.75]);
+	assert.deepStrictEqual(colorRgba('#f00'), [255, 0, 0, 1]);
+
+	assert.deepStrictEqual(colorRgba('xyz'), []);
+});

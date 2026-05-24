@@ -1,4 +1,4 @@
 {
 	"diff": false,
-	"spec": "test/json_parse.test.js"
+	"spec": "test/*.test.js"
 }

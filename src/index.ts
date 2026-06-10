@@ -16,7 +16,7 @@ declare interface JsonError {
 
 export type RegexGetter<T = string> = (s: T) => RegExp;
 
-export {splitColors, rgba, namedColors} from './color.js';
+export * from './color.js';
 
 export const wmf = 'wiktionary|wiki(?:pedia|books|news|quote|source|versity|voyage)';
 
@@ -31,15 +31,70 @@ export const rawurldecode = (str: string): string =>
 /**
  * 将0~255之间的整数转换为十六进制
  * @param d 0~255之间的整数
+ * @param len 十六进制数的最小长度，默认为2
  */
-export const intToHex = (d: number): string =>
-	Math.round(d).toString(16).padStart(2, '0');
+export const intToHex = (d: number, len = 2): string =>
+	Math.round(d).toString(16).padStart(len, '0');
 
 /**
  * 将0~1之间的数字转换为十六进制
  * @param d 0~1之间的数字
  */
 export const numToHex = (d: number): string => intToHex(d * 255);
+
+const regex = /* #__PURE__ */ (() => {
+	const wordChar = String.raw`\p{L}\p{N}_`,
+		hex = String.raw`[\da-f]`,
+		hexColor = `#(?:${hex}{3,4}|(?:${hex}{2}){3,4})(?![${wordChar}])`,
+		num = String.raw`[+-]?(?:\d*\.)?\d+`,
+		per = `${num}%`,
+		rgbValue = `${per}?`,
+		rgbArr = Array.from({length: 3}, () => rgbValue),
+		space = String.raw`\s+`,
+		comma = String.raw`\s*,\s*`,
+		slash = String.raw`\s*\/\s*`,
+		rgbColor = String.raw`rgba?\(\s*(?:${
+			`${rgbArr.join(space)}(?:${slash}${rgbValue})?`
+		}|${
+			`${rgbArr.join(comma)}(?:${comma}${rgbValue})?`
+		})\s*\)`,
+		hslColor = String.raw`hsla?\(\s*${num}(?:deg|g?rad|turn)?(?:${
+			`${(space + rgbValue).repeat(2)}(?:${slash}${rgbValue})?`
+		}|${
+			`${(comma + per).repeat(2)}(?:${comma}${rgbValue})?`
+		})\s*\)`,
+		source = `(^|[^${wordChar}])(${hexColor}|${rgbColor}`;
+	return {
+		full: new RegExp(`${source}|${hslColor})`, 'giu'),
+		rgb: new RegExp(`${source})`, 'giu'),
+	};
+})();
+
+/**
+ * 包含颜色时断开字符串
+ * @param str 字符串
+ * @param hsl 是否包含 HSL
+ */
+export const splitColors = (str: string, hsl = true): [string, number, number, boolean][] => {
+	const pieces: [string, number, number, boolean][] = [],
+		re = regex[hsl ? 'full' : 'rgb'];
+	re.lastIndex = 0;
+	let mt = re.exec(str),
+		lastIndex = 0;
+	while (mt) {
+		const index = mt.index + mt[1]!.length;
+		if (index > lastIndex) {
+			pieces.push([str.slice(lastIndex, index), lastIndex, index, false]);
+		}
+		({lastIndex} = re);
+		pieces.push([mt[2]!, index, lastIndex, str[index - 1] !== '&' || !/^#\d+$/u.test(mt[2]!)]);
+		mt = re.exec(str);
+	}
+	if (str.length > lastIndex) {
+		pieces.push([str.slice(lastIndex), lastIndex, str.length, false]);
+	}
+	return pieces;
+};
 
 /**
  * 清理内联样式中的`{`和`}`

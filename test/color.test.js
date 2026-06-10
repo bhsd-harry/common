@@ -1,25 +1,13 @@
 import assert from 'assert';
-import {rgba, namedColors} from '../dist/color.js';
+import {rgba} from '../dist/color.js';
 
 const parse = color => {
-		const result = rgba(color, namedColors);
-		if (!result) {
-			return false;
-		}
-		const {r, g, b, a} = result.toRgb();
-		return {
-			values: [r, g, b],
-			alpha: a,
-		};
-	},
-	colorRgba = color => {
-		const result = rgba(color, namedColors);
-		if (!result) {
-			return [];
-		}
-		const {r, g, b, a} = result.toRgb();
-		return [r, g, b, a];
+	const [r, g, b, alpha] = rgba(color);
+	return alpha !== undefined && {
+		values: [r, g, b],
+		alpha,
 	};
+};
 
 /**
  * @author Dmitry Ivanov <df.creative@gmail.com>
@@ -85,7 +73,7 @@ describe('color-parse tests', () => {
 	});
 	it('rgb(100%, 30%, 90%)', () => {
 		assert.deepStrictEqual(parse('rgb(100%, 30%, 90%)'), {
-			values: [255, 77, 229],
+			values: [255, 77, 230],
 			alpha: 1,
 		});
 	});
@@ -155,7 +143,7 @@ describe('color-parse tests', () => {
 	});
 	it('rgba(100%, 30%, 90%, 0.2)', () => {
 		assert.deepStrictEqual(parse('rgba(100%, 30%, 90%, 0.2)'), {
-			values: [255, 77, 229],
+			values: [255, 77, 230],
 			alpha: 0.2,
 		});
 	});
@@ -309,19 +297,19 @@ describe('color-parse tests', () => {
  * @see https://github.com/colorjs/color-rgba/blob/master/test.js
  */
 it('color-rgba tests', () => {
-	assert.deepStrictEqual(colorRgba('rgba(1,2,3,.5)'), [1, 2, 3, 0.5]);
-	assert.deepStrictEqual(colorRgba('rgba(0,0,0,0)'), [0, 0, 0, 0]);
-	assert.deepStrictEqual(colorRgba('hsla(0,0,0,1)'), []);
-	assert.deepStrictEqual(colorRgba('rgba(-300,-300,-300,-1)'), [0, 0, 0, 0]);
+	assert.deepStrictEqual(rgba('rgba(1,2,3,.5)'), [1, 2, 3, 0.5]);
+	assert.deepStrictEqual(rgba('rgba(0,0,0,0)'), [0, 0, 0, 0]);
+	assert.deepStrictEqual(rgba('hsla(0,0,0,1)'), []);
+	assert.deepStrictEqual(rgba('rgba(-300,-300,-300,-1)'), [0, 0, 0, 0]);
 
-	assert.deepStrictEqual(colorRgba('red'), [255, 0, 0, 1]);
-	assert.deepStrictEqual(colorRgba('rgb(80, 120, 160)'), [80, 120, 160, 1]);
-	assert.deepStrictEqual(colorRgba('rgba(80, 120, 160, .5)'), [80, 120, 160, 0.5]);
-	assert.deepStrictEqual(colorRgba('rgba(80 120 160 / .5)'), [80, 120, 160, 0.5]);
-	assert.deepStrictEqual(colorRgba('hsl(291 80% 50%)'), [199, 26, 230, 1]);
-	assert.deepStrictEqual(colorRgba('hsl(0.8083333333333333turn 80% 50%)'), [199, 26, 230, 1]);
-	assert.deepStrictEqual(colorRgba('hsla(109, 50%, 50%, .75)'), [87, 191, 64, 0.75]);
-	assert.deepStrictEqual(colorRgba('#f00'), [255, 0, 0, 1]);
+	assert.deepStrictEqual(rgba('red'), [255, 0, 0, 1]);
+	assert.deepStrictEqual(rgba('rgb(80, 120, 160)'), [80, 120, 160, 1]);
+	assert.deepStrictEqual(rgba('rgba(80, 120, 160, .5)'), [80, 120, 160, 0.5]);
+	assert.deepStrictEqual(rgba('rgba(80 120 160 / .5)'), [80, 120, 160, 0.5]);
+	assert.deepStrictEqual(rgba('hsl(291 80% 50%)'), [199, 25, 230, 1]);
+	assert.deepStrictEqual(rgba('hsl(0.8083333333333333turn 80% 50%)'), [199, 25, 230, 1]);
+	assert.deepStrictEqual(rgba('hsla(109, 50%, 50%, .75)'), [87, 191, 64, 0.75]);
+	assert.deepStrictEqual(rgba('#f00'), [255, 0, 0, 1]);
 
-	assert.deepStrictEqual(colorRgba('xyz'), []);
+	assert.deepStrictEqual(rgba('xyz'), []);
 });

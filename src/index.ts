@@ -44,8 +44,9 @@ export const numToHex = (d: number): string => intToHex(d * 255);
 
 const regex = /* #__PURE__ */ (() => {
 	const wordChar = String.raw`\p{L}\p{N}_`,
+		wordBoundary = `(?![${wordChar}])`,
 		hex = String.raw`[\da-f]`,
-		hexColor = `#(?:${hex}{3,4}|(?:${hex}{2}){3,4})(?![${wordChar}])`,
+		hexColor = `#(?:${hex}{3,4}|(?:${hex}{2}){3,4})${wordBoundary}`,
 		num = String.raw`[+-]?(?:\d*\.)?\d+`,
 		per = `${num}%`,
 		rgbValue = `${per}?`,
@@ -63,21 +64,23 @@ const regex = /* #__PURE__ */ (() => {
 		}|${
 			`${(comma + per).repeat(2)}(?:${comma}${rgbValue})?`
 		})\s*\)`,
-		source = `(^|[^${wordChar}])(${hexColor}|${rgbColor}`;
+		source = `(^|[^${wordChar}])(${hexColor}|${rgbColor}|${hslColor}`;
 	return {
-		full: new RegExp(`${source}|${hslColor})`, 'giu'),
-		rgb: new RegExp(`${source})`, 'giu'),
+		full: new RegExp(`${source})`, 'giu'),
+		names: `${source}|(?:transparent|$1)${wordBoundary})`,
 	};
 })();
 
 /**
  * 包含颜色时断开字符串
  * @param str 字符串
- * @param hsl 是否包含 HSL
+ * @param names 颜色名称列表，如果提供则也会匹配这些名称，否则只匹配十六进制代码和函数
  */
-export const splitColors = (str: string, hsl = true): [string, number, number, boolean][] => {
+export const splitColors = (str: string, names?: string[] | false): [string, number, number, boolean][] => {
 	const pieces: [string, number, number, boolean][] = [],
-		re = regex[hsl ? 'full' : 'rgb'];
+		re = Array.isArray(names) && names.length > 0
+			? new RegExp(regex.names.replace('$1', names.join('|')), 'giu')
+			: regex.full;
 	re.lastIndex = 0;
 	let mt = re.exec(str),
 		lastIndex = 0;

@@ -1,5 +1,4 @@
 import config, {browser} from '@bhsd/code-standard';
-import globals from 'globals';
 
 export default [
 	...config,
@@ -39,12 +38,6 @@ export default [
 			'@typescript-eslint/no-confusing-void-expression': 0,
 			'@typescript-eslint/no-unnecessary-condition': 0,
 			'@typescript-eslint/only-throw-error': 0,
-		},
-	},
-	{
-		files: ['test/*.js'],
-		languageOptions: {
-			globals: globals.mocha,
 		},
 	},
 ];

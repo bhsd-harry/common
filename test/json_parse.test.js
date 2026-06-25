@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import assert from 'assert';
+import {describe, it} from '@bhsd/test-util/mocha';
 import {jsonLanguage, jsoncLanguage} from '@bhsd/lezer-json';
 import {lintJSON, lintJSONNative, lintJSONC} from '../dist/index.js';
 

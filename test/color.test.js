@@ -1,4 +1,5 @@
 import assert from 'assert';
+import {describe, it} from '@bhsd/test-util/mocha';
 import {rgba} from '../dist/color.js';
 
 const parse = color => {

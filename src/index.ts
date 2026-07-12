@@ -16,8 +16,6 @@ declare interface JsonError {
 
 export type RegexGetter<T = string> = (s: T) => RegExp;
 
-export * from './color.js';
-
 export const wmf = 'wiktionary|wiki(?:pedia|books|news|quote|source|versity|voyage)';
 
 /**

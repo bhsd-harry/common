@@ -77,7 +77,7 @@ const regex = /* #__PURE__ */ (() => {
 export const splitColors = (str: string, names?: string[] | false): [string, number, number, boolean][] => {
 	const pieces: [string, number, number, boolean][] = [],
 		re = Array.isArray(names) && names.length > 0
-			? new RegExp(regex.names.replace('$1', names.join('|')), 'giu')
+			? new RegExp(regex.names.replace('$1', () => names.join('|')), 'giu')
 			: regex.full;
 	re.lastIndex = 0;
 	let mt = re.exec(str),

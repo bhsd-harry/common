@@ -35,7 +35,7 @@
 		}
 	},
 	"devDependencies": {
-		"@bhsd/code-standard": "^3.1.0",
+		"@bhsd/code-standard": "^3.2.0",
 		"@bhsd/lezer-json": "^2.1.0",
 		"@bhsd/test-util": "^3.1.0",
 		"@types/culori": "^4.0.1",

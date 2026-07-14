@@ -170,7 +170,7 @@ const factory = (jsonc?: boolean) => {
 				next();
 			}
 		}
-		if (ch === "e" || ch === "E") {
+		if (ch === "e" || ch === "E") { // eslint-disable-line unicorn/prefer-else-if
 			string += ch;
 			next();
 			// @ts-expect-error `ch` modified
@@ -269,7 +269,7 @@ const factory = (jsonc?: boolean) => {
 					next(); // skip /
 					next(); // skip *
 					// @ts-expect-error `ch` modified
-					while (ch && !(ch === "*" && text.charAt(at) === "/")) {
+					while (ch && (ch !== "*" || text.charAt(at) !== "/")) {
 						next();
 					}
 					if (ch === "*") {
@@ -423,9 +423,7 @@ const factory = (jsonc?: boolean) => {
 			case "-":
 				return number();
 			default:
-				return ch >= "0" && ch <= "9"
-					? number()
-					: word();
+				return (ch >= "0" && ch <= "9" ? number : word)();
 		}
 	};
 

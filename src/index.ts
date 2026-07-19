@@ -23,7 +23,6 @@ export const wmf = 'wiktionary|wiki(?:pedia|books|news|quote|source|versity|voya
  * @param str 要解码的字符串
  */
 export const rawurldecode = (str: string): string =>
-	// eslint-disable-next-line unicorn/prefer-string-replace-all
 	decodeURIComponent(str.replace(/%(?![\da-f]{2})/giu, '%25'));
 
 /**
@@ -102,8 +101,8 @@ export const splitColors = (str: string, names?: string[] | false): [string, num
  * @param style 内联样式
  */
 export const sanitizeInlineStyle = (style: string): string =>
-	style.replaceAll(/[{}]/gu, p => p === '{' ? '｛' : '｝')
-		.replace(/^[\s;]+/u, p => p.replaceAll(';', ' '));
+	style.replace(/[{}]/gu, p => p === '{' ? '｛' : '｝')
+		.replace(/^[\s;]+/u, p => p.replace(/;/gu, ' '));
 
 /**
  * 缓存生成的正则表达式

@@ -227,7 +227,6 @@ export const lintJSON = (str: string): JsonError[] => {
 		return [];
 	}
 	const errors = lintJSONBase(str, json_parse);
-	// eslint-disable-next-line unicorn/prefer-at
 	return errors[errors.length - 1]?.severity === 'error' ? errors : [...errors, ...lintJSONNative(str)];
 };
 

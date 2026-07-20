@@ -1,4 +1,4 @@
-import config, {browser} from '@bhsd/code-standard';
+import config, {browser, browserES10} from '@bhsd/code-standard';
 
 export default [
 	...config,
@@ -19,6 +19,10 @@ export default [
 			],
 			'unicorn/prefer-string-replace-all': 0,
 		},
+	},
+	{
+		files: ['src/*.ts'],
+		rules: browserES10.rules,
 	},
 	{
 		files: ['src/json_parse.ts'],

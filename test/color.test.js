@@ -96,11 +96,17 @@ describe('color-parse tests', () => {
 			alpha: 1,
 		});
 	});
-	it('hwb(240, 100%, 50.5%)', () => {
-		assert.deepStrictEqual(parse('hwb(240, 100%, 50.5%)'), false);
+	it('hwb(240 100% 50.5%)', () => {
+		assert.deepStrictEqual(parse('hwb(240 100% 50.5%)'), {
+			values: [169, 169, 169],
+			alpha: 1,
+		});
 	});
-	it('hwb(240deg, 100%, 50.5%)', () => {
-		assert.deepStrictEqual(parse('hwb(240deg, 100%, 50.5%)'), false);
+	it('hwb(240deg 100% 50.5%)', () => {
+		assert.deepStrictEqual(parse('hwb(240deg 100% 50.5%)'), {
+			values: [169, 169, 169],
+			alpha: 1,
+		});
 	});
 	it('blue', () => {
 		assert.deepStrictEqual(parse('blue'), {
@@ -124,11 +130,17 @@ describe('color-parse tests', () => {
 			alpha: 0.6,
 		});
 	});
-	it('hwb(244, 100%, 100%, 0.6)', () => {
-		assert.deepStrictEqual(parse('hwb(244, 100%, 100%, 0.6)'), false);
+	it('hwb(244 100% 100% / 0.6)', () => {
+		assert.deepStrictEqual(parse('hwb(244 100% 100% / 0.6)'), {
+			values: [128, 128, 128],
+			alpha: 0.6,
+		});
 	});
-	it('hwb(244, 100%, 100%)', () => {
-		assert.deepStrictEqual(parse('hwb(244, 100%, 100%)'), false);
+	it('hwb(244 100% 100%)', () => {
+		assert.deepStrictEqual(parse('hwb(244 100% 100%)'), {
+			values: [128, 128, 128],
+			alpha: 1,
+		});
 	});
 	it('rgba(200, 20, 233, 0.2)', () => {
 		assert.deepStrictEqual(parse('rgba(200, 20, 233, 0.2)'), {
@@ -188,8 +200,11 @@ describe('color-parse tests', () => {
 			alpha: 1,
 		});
 	});
-	it('hwb(400, 10%, 200%, 10)', () => {
-		assert.deepStrictEqual(parse('hwb(400, 10%, 200%, 10)'), false);
+	it('hwb(400 10% 200% / 10)', () => {
+		assert.deepStrictEqual(parse('hwb(400 10% 200% / 10)'), {
+			values: [12, 12, 12],
+			alpha: 1,
+		});
 	});
 	it('yellowblue', () => {
 		assert.deepStrictEqual(parse('yellowblue'), false);
@@ -223,17 +238,17 @@ describe('color-parse tests', () => {
 			alpha: 1,
 		});
 	});
-	it('lch(5, 5, orange)', () => {
-		assert.deepStrictEqual(parse('lch(5, 5, orange)'), false);
+	it('lch(5 5 5)', () => {
+		assert.deepStrictEqual(parse('lch(5 5 5)'), false);
 	});
-	it('lch(5 5 orange / .5)', () => {
-		assert.deepStrictEqual(parse('lch(5 5 orange / .5)'), false);
+	it('lch(5 5 5 / .5)', () => {
+		assert.deepStrictEqual(parse('lch(5 5 5 / .5)'), false);
 	});
-	it('lab(0.25, 0.25, 0.25)', () => {
-		assert.deepStrictEqual(parse('lab(0.25, 0.25, 0.25)'), false);
+	it('lab(25 25 25)', () => {
+		assert.deepStrictEqual(parse('lab(25 25 25)'), false);
 	});
-	it('lab(0.25 0.25 0.25 / 0.5)', () => {
-		assert.deepStrictEqual(parse('lab(0.25 0.25 0.25 / 0.5)'), false);
+	it('lab(25 25 25 / 0.5)', () => {
+		assert.deepStrictEqual(parse('lab(25 25 25 / 0.5)'), false);
 	});
 
 	it('color(...)', () => {
@@ -260,9 +275,9 @@ describe('color-parse tests', () => {
 		assert.deepStrictEqual(parse('oklab(none none none / none)'), false);
 	});
 	it('oklch', () => {
-		assert.deepStrictEqual(parse('oklch(40.1% 0.1143 0.045)'), false);
+		assert.deepStrictEqual(parse('oklch(40.1% 0.1143 4.5)'), false);
 		assert.deepStrictEqual(parse('oklch(59.69% 10% 49.77 / 0.5)'), false);
-		assert.deepStrictEqual(parse('oklch(40.1% 0.156 49.1% / .5)'), false);
+		assert.deepStrictEqual(parse('oklch(40.1% 0.156 49.1deg / .5)'), false);
 		assert.deepStrictEqual(parse('oklch(none none none / none)'), false);
 	});
 

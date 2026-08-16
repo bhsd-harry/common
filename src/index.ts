@@ -47,24 +47,27 @@ const regex = /* #__PURE__ */ (() => {
 		num = String.raw`[+-]?(?:\d*\.)?\d+`,
 		per = `${num}%`,
 		rgbValue = `${per}?`,
-		rgbArr = Array.from({length: 3}, () => rgbValue),
 		space = String.raw`\s+`,
-		comma = String.raw`\s*,\s*`,
-		slash = String.raw`\s*\/\s*`,
-		rgbColor = String.raw`rgba?\(\s*(?:${
-			`${rgbArr.join(space)}(?:${slash}${rgbValue})?`
-		}|${
-			`${rgbArr.join(comma)}(?:${comma}${rgbValue})?`
-		})\s*\)`,
-		hslColor = String.raw`hsla?\(\s*${num}(?:deg|g?rad|turn)?(?:${
-			`${(space + rgbValue).repeat(2)}(?:${slash}${rgbValue})?`
-		}|${
-			`${(comma + per).repeat(2)}(?:${comma}${rgbValue})?`
-		})\s*\)`,
-		source = `(^|[^${wordChar}])(${hexColor}|${rgbColor}|${hslColor}`;
+		space0 = String.raw`\s*`,
+		comma = `${space0},${space0}`,
+		lpar = String.raw`\(${space0}`,
+		rpar = String.raw`${space0}\)`,
+		deg = `${num}(?:deg|g?rad|turn)?`,
+		lparAndRgb = lpar + rgbValue,
+		lparAndDeg = lpar + deg,
+		legacyRgb = `(?:${comma + rgbValue})`,
+		modernAlpha = String.raw`(?:${space0}\/${space0}${rgbValue})?`,
+		modernRgb = `(?:${space + rgbValue}){2}${modernAlpha}`,
+		rgbColor = `rgba?${lparAndRgb}(?:${modernRgb}|${legacyRgb}{2,3})`,
+		hslColor = `hsla?${lparAndDeg}(?:${modernRgb}|(?:${comma + per}){2}${legacyRgb}?)`,
+		hwbColor = `hwb${lparAndDeg}(?:${space + per}){2}${modernAlpha}`,
+		labColor = `(?:ok)?lab${lparAndRgb + modernRgb}`,
+		lchColor = `(?:ok)?lch${lpar}(?:${rgbValue + space}){2}${deg + modernAlpha}`,
+		source = `(^|[^${wordChar}])(${hexColor}|(?:${rgbColor}|${hslColor}|${hwbColor})${rpar}`;
 	return {
 		full: new RegExp(`${source})`, 'giu'),
 		names: `${source}|(?:transparent|$1)${wordBoundary})`,
+		hwb: new RegExp(`${source}|(?:${labColor}|${lchColor})${rpar})`, 'giu'),
 	};
 })();
 
@@ -73,11 +76,11 @@ const regex = /* #__PURE__ */ (() => {
  * @param str 字符串
  * @param names 颜色名称列表，如果提供则也会匹配这些名称，否则只匹配十六进制代码和函数
  */
-export const splitColors = (str: string, names?: string[] | false): [string, number, number, boolean][] => {
+export const splitColors = (str: string, names?: string[] | boolean): [string, number, number, boolean][] => {
 	const pieces: [string, number, number, boolean][] = [],
 		re = Array.isArray(names) && names.length > 0
 			? new RegExp(regex.names.replace('$1', () => names.join('|')), 'giu')
-			: regex.full;
+			: regex[names ? 'hwb' : 'full'];
 	re.lastIndex = 0;
 	let mt = re.exec(str),
 		lastIndex = 0;

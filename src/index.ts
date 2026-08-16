@@ -67,7 +67,7 @@ const regex = /* #__PURE__ */ (() => {
 	return {
 		full: new RegExp(`${source})`, 'giu'),
 		names: `${source}|(?:transparent|$1)${wordBoundary})`,
-		hwb: new RegExp(`${source}|(?:${labColor}|${lchColor})${rpar})`, 'giu'),
+		lab: new RegExp(`${source}|(?:${labColor}|${lchColor})${rpar})`, 'giu'),
 	};
 })();
 
@@ -80,7 +80,7 @@ export const splitColors = (str: string, names?: string[] | boolean): [string, n
 	const pieces: [string, number, number, boolean][] = [],
 		re = Array.isArray(names) && names.length > 0
 			? new RegExp(regex.names.replace('$1', () => names.join('|')), 'giu')
-			: regex[names ? 'hwb' : 'full'];
+			: regex[names ? 'lab' : 'full'];
 	re.lastIndex = 0;
 	let mt = re.exec(str),
 		lastIndex = 0;

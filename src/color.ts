@@ -25,6 +25,7 @@ export const rgba = (color: string): [number, number, number, number] | [] => {
 /**
  * 将颜色字符串转换为 HSLA 数组
  * @param color 颜色字符串
+ * @deprecated
  */
 export const hsla = (color: string): [number, number, number, number] | [] => {
 	const result = parseHSL(color.trim().toLowerCase());

@@ -37,10 +37,10 @@
 	"devDependencies": {
 		"@bhsd/code-standard": "^4.1.0",
 		"@bhsd/lezer-json": "^2.1.2",
-		"@bhsd/test-util": "^3.1.1",
+		"@bhsd/test-util": "^3.1.2",
 		"@types/culori": "^4.0.1",
 		"culori": "^4.0.2",
-		"eslint": "^10.8.1",
+		"eslint": "^10.9.1",
 		"typescript": "^6.0.3"
 	},
 	"engines": {

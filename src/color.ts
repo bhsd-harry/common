@@ -3,7 +3,7 @@ export {colorsNamed} from 'culori/fn';
 
 const parseRGB = /* #__PURE__ */ useMode(modeRgb),
 	parseHSL = /* #__PURE__ */ useMode(modeHsl);
-useMode(modeHwb); // eslint-disable-line unicorn/no-top-level-side-effects
+/* #__PURE__ */ useMode(modeHwb); // eslint-disable-line unicorn/no-top-level-side-effects
 
 const normalizeRGB = (component: number): number =>
 		Math.min(255, Math.max(0, Math.round(component * 255))),

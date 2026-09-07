@@ -188,11 +188,10 @@ const factory = (jsonc?: boolean) => {
 	const string = (): string => {
 		// Parse a string value.
 
-		let value = '';
-
 		// When parsing for string values, we must look for " and \ characters.
 
 		if (ch === '"') {
+			let value = '';
 			while (next()) {
 				if (ch === '"') {
 					next();

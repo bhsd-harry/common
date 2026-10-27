@@ -1,6 +1,6 @@
-import config, {browser, browserES10} from '@bhsd/code-standard';
+import config, {browser, browserES10, getOxlintConfig} from '@bhsd/code-standard';
 
-export default [
+const oxlintConfig = getOxlintConfig([
 	...config,
 	browser,
 	{
@@ -32,4 +32,6 @@ export default [
 			'@typescript-eslint/only-throw-error': 0,
 		},
 	},
-];
+]);
+
+export default oxlintConfig;

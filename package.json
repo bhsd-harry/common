@@ -14,16 +14,16 @@
 	"types": "./dist/index.d.ts",
 	"exports": {
 		".": "./dist/index.js",
-		"./color": "./dist/color.js"
+		"./*": "./dist/*.js"
 	},
 	"type": "module",
 	"sideEffects": false,
 	"scripts": {
-		"ls": "npm i --package-lock-only && npm ls --package-lock-only -a --omit=dev",
 		"prepublishOnly": "npm run build",
 		"build": "tsc && eslint --no-inline-config --no-config-lookup -c eslint.dist.js dist/*.js",
-		"lint:ts": "tsc --noEmit && eslint --cache .",
+		"lint:ts": "tsc --noEmit && oxlint && eslint --cache .",
 		"lint": "npm run lint:ts",
+		"migrate": "oxlint-migrate",
 		"test": "testUtil test/*.test.js"
 	},
 	"peerDependencies": {
@@ -35,15 +35,17 @@
 		}
 	},
 	"devDependencies": {
-		"@bhsd/code-standard": "^5.0.0",
+		"@bhsd/code-standard": "^5.1.0",
 		"@bhsd/lezer-json": "^2.3.0",
 		"@bhsd/test-util": "^3.3.0",
+		"@oxlint/migrate": "^1.89.0",
 		"@types/culori": "^4.0.1",
 		"culori": "^4.0.2",
-		"eslint": "^10.13.0",
+		"eslint": "^10.14.0",
+		"oxlint": "^1.89.0",
 		"typescript": "^6.0.3"
 	},
 	"engines": {
-		"node": "^20.19.0 || ^22.13.0 || >=24.11.0"
+		"node": "^22.13.0 || >=24.11.0"
 	}
 }

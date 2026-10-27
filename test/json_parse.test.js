@@ -36,7 +36,7 @@ const isInvalid = (data, s = 'error', jsonc = false, n = 1) => {
 		throw new RangeError('Missing error message');
 	} else if (s !== 'warning') {
 		m = s;
-		s = 'error'; // eslint-disable-line no-param-reassign
+		s = 'error'; // oxlint-disable-line no-param-reassign
 	}
 	const result = (jsonc ? lintJSONC : lintJSON)(data);
 	assert.strictEqual(result.length, n, data);

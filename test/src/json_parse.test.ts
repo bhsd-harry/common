@@ -3,31 +3,31 @@ import path from 'path';
 import assert from 'assert';
 import {describe, it} from '@bhsd/test-util/mocha';
 import {jsonLanguage, jsoncLanguage} from '@bhsd/lezer-json';
-import {lintJSON, lintJSONNative, lintJSONC} from '../dist/index.js';
+import {lintJSON, lintJSONNative, lintJSONC} from '../../dist/index.js';
 
 const offsetMsg = new Set(['Bad escaped character', 'Bad control character']),
 	jsonParser = jsonLanguage.parser.configure({strict: true}),
 	jsoncParser = jsoncLanguage.parser.configure({strict: true});
 
-const isValidForLezer = (data, jsonc) => {
+const isValidForLezer = (data: string, jsonc: boolean): void => {
 	if ((jsonc ? data.replaceAll(/\/\/.*|\/\*[\s\S]*?(?:\*\/|$)/gu, '') : data).trim()) {
 		(jsonc ? jsoncParser : jsonParser).parse(data);
 	}
 };
 
-const isValid = (data, jsonc = false) => {
+const isValid = (data: string, jsonc = false): void => {
 	assert.strictEqual(typeof jsonc, 'boolean');
 	assert.strictEqual((jsonc ? lintJSONC : lintJSON)(data).length, 0, data);
 	isValidForLezer(data, jsonc);
 };
 
-const match = (data, from, line, column) => {
+const match = (data: string, from: number, line: number, column: number): void => {
 	const lines = data.slice(0, from).split('\n');
 	assert.strictEqual(lines.length, line);
-	assert.strictEqual(lines.at(-1).length + 1, column);
+	assert.strictEqual(lines.at(-1)!.length + 1, column);
 };
 
-const isInvalid = (data, s = 'error', jsonc = false, n = 1) => {
+const isInvalid = (data: string, s = 'error', jsonc = false, n = 1): void => {
 	assert.strictEqual(typeof s, 'string');
 	assert.strictEqual(typeof jsonc, 'boolean');
 	assert.strictEqual(typeof n, 'number');
@@ -40,7 +40,7 @@ const isInvalid = (data, s = 'error', jsonc = false, n = 1) => {
 	}
 	const result = (jsonc ? lintJSONC : lintJSON)(data);
 	assert.strictEqual(result.length, n, data);
-	const [{severity, message, line, column, from, to = from, endLine = line, endColumn = column}] = result;
+	const {severity, message, line, column, from, to = from, endLine = line, endColumn = column} = result[0]!;
 	assert.strictEqual(severity, s, data);
 	if (!jsonc && s === 'error') {
 		const [e] = lintJSONNative(data);

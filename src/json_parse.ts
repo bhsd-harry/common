@@ -148,7 +148,7 @@ const factory = (jsonc?: boolean) => {
 		} else {
 			error('No number after minus sign');
 		}
-		if (ch !== '.' && ch !== 'e' && ch !== 'E') {
+		if (!['.', 'e', 'E'].includes(ch)) {
 			const value = Number(string);
 			if (!Number.isSafeInteger(value)) {
 				warn('Not a safe integer', from);

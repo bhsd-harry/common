@@ -1,11 +1,11 @@
 import assert from 'assert';
 import {describe, it} from '@bhsd/test-util/mocha';
-import {rgba} from '../dist/color.js';
+import {rgba} from '../../dist/color.js';
 
-const parse = color => {
+const parse = (color: string): {values: [number, number, number], alpha: number} | false => {
 	const [r, g, b, alpha] = rgba(color);
 	return alpha !== undefined && {
-		values: [r, g, b],
+		values: [r!, g!, b!],
 		alpha,
 	};
 };
@@ -332,7 +332,7 @@ it('color-rgba tests', () => {
 	assert.deepStrictEqual(rgba('srgb(0.85098 0.121569 0.160784)'), []);
 
 	// CSS Color 4 spaces — reference coordinates from colorjs.io / IEC 61966-2-1
-	const round = v => v.map(x => Math.round(x));
+	const round = (v: number[]): number[] => v.map(x => Math.round(x));
 	assert.deepStrictEqual(round(rgba('lab(54.291 80.805 69.891)')), []); // red, Lab D50 (colorjs.io)
 	assert.deepStrictEqual(round(rgba('lch(54.291 106.837 40.858)')), []); // red, LCh D50 (colorjs.io)
 	assert.deepStrictEqual(round(rgba('oklch(0.62796 0.25768 29.234)')), []); // red (colorjs.io)

@@ -190,17 +190,21 @@ const formatJsonError = (str: string, errors: ExtendedJsonSyntaxError[]): JsonEr
  * 使用`JSON.parse()`诊断JSON字符串中的语法错误
  * @param str JSON字符串
  * @param force 是否强制诊断
+ * @throws 非语法错误的异常
  */
 export const lintJSONNative = (str: string, force?: boolean): JsonError[] => {
 	if (force || str.trim()) {
 		try {
 			JSON.parse(str);
 		} catch (e) {
-			const {message} = e as SyntaxError,
-				line = mt2num(/\bline (\d+)/u.exec(message)),
-				column = mt2num(/\bcolumn (\d+)/u.exec(message)),
-				from = mt2num(/\bposition (\d+)/u.exec(message));
-			return formatJsonError(str, [{message, line, column, from, severity: 'error'}]);
+			if (e instanceof SyntaxError) {
+				const {message} = e,
+					line = mt2num(/\bline (\d+)/u.exec(message)),
+					column = mt2num(/\bcolumn (\d+)/u.exec(message)),
+					from = mt2num(/\bposition (\d+)/u.exec(message));
+				return formatJsonError(str, [{message, line, column, from, severity: 'error'}]);
+			}
+			throw e;
 		}
 	}
 	return [];
@@ -210,13 +214,14 @@ const lintJSONBase = (str: string, parse: (s: string) => void): JsonError[] => {
 	try {
 		parse(str);
 	} catch (e) {
-		if (!(e instanceof Error)) {
-			const {warnings, ...error} = e as JsonSyntaxError;
-			if (error.message) {
-				warnings.push(error as ExtendedJsonSyntaxError);
-			}
-			return formatJsonError(str, warnings);
+		if (e instanceof Error) {
+			throw e;
 		}
+		const {warnings, ...error} = e as JsonSyntaxError;
+		if (error.message) {
+			warnings.push(error as ExtendedJsonSyntaxError);
+		}
+		return formatJsonError(str, warnings);
 	}
 	return [];
 };

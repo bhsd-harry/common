@@ -40,7 +40,11 @@ const isInvalid = (data: string, s = 'error', jsonc = false, n = 1): void => {
 	}
 	const result = (jsonc ? lintJSONC : lintJSON)(data);
 	assert.strictEqual(result.length, n, data);
-	const {severity, message, line, column, from, to = from, endLine = line, endColumn = column} = result[0]!;
+	let i = result.findIndex(({severity}) => severity === 'error');
+	if (i === -1) {
+		i = 0;
+	}
+	const {severity, message, line, column, from, to = from, endLine = line, endColumn = column} = result[i]!;
 	assert.strictEqual(severity, s, data);
 	if (!jsonc && s === 'error') {
 		const [e] = lintJSONNative(data);
@@ -297,7 +301,7 @@ describe('vscode-json-languageservice for JSONC', () => {
 
 	it('Arrays', () => {
 		isInvalid('[', 'Unterminated array', true);
-		isValid('[,]', true);
+		isInvalid('[,]', 'warning', true);
 		isInvalid('[1 2]', 'Expected "," or "]" instead of "2"', true);
 		isInvalid('[true false]', 'Expected "," or "]" instead of "f"', true);
 		isValid('[1, ]', true);
@@ -328,7 +332,7 @@ describe('vscode-json-languageservice for JSONC', () => {
 
 	it('Comments', () => {
 		isValid('/*d*/ { } /*e*/', true);
-		isValid('/*d { }', true);
+		isInvalid('/*d { }', 'warning', true);
 		isInvalid('{ "//": "comment1", "//": "comment2" }', 'warning');
 		isInvalid('{ "regularKey": "value1", "regularKey": "value2" }', 'warning', true);
 	});
@@ -415,20 +419,20 @@ describe('jsonc-parser', () => {
 	});
 
 	it('parse: objects with errors', () => {
-		isValid('{,}', true);
+		isInvalid('{,}', 'warning', true);
 		isValid('{ "foo": true, }', true);
 		isInvalid('{ "bar": 8 "xoo": "foo" }', 'Expected "," or "}" instead of \'"\'', true);
-		isInvalid('{ ,"bar": 8 }', 'Expected "}" instead of \'"\'', true);
-		isInvalid('{ ,"bar": 8, "foo" }', 'Expected "}" instead of \'"\'', true);
+		isInvalid('{ ,"bar": 8 }', 'Expected "}" instead of \'"\'', true, 2);
+		isInvalid('{ ,"bar": 8, "foo" }', 'Expected "}" instead of \'"\'', true, 2);
 		isInvalid('{ "bar": 8, "foo": }', 'Unexpected "}"', true);
 		isInvalid('{ 8, "foo": 9 }', 'Expected \'"\' instead of "8"', true);
 	});
 
 	it('parse: array with errors', () => {
-		isValid('[,]', true);
+		isInvalid('[,]', 'warning', true);
 		isInvalid('[ 1 2, 3 ]', 'Expected "," or "]" instead of "2"', true);
-		isInvalid('[ ,1, 2, 3 ]', 'Expected "]" instead of "1"', true);
-		isInvalid('[ ,1, 2, 3, ]', 'Expected "]" instead of "1"', true);
+		isInvalid('[ ,1, 2, 3 ]', 'Expected "]" instead of "1"', true, 2);
+		isInvalid('[ ,1, 2, 3, ]', 'Expected "]" instead of "1"', true, 2);
 	});
 
 	it('parse: errors', () => {

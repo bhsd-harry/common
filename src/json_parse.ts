@@ -83,7 +83,7 @@ const factory = (jsonc?: boolean) => {
 			e.from = at - 1;
 		} else {
 			e.from = from;
-			e.to = to ?? at - 1;
+			e.to = Math.min(to ?? at - 1, text.length);
 		}
 	};
 
@@ -180,8 +180,10 @@ const factory = (jsonc?: boolean) => {
 			}
 		}
 		const value = Number(string);
-		if (!Number.isFinite(value)) {
+		if (Number.isNaN(value)) {
 			error('Bad number');
+		} else if (!Number.isFinite(value)) {
+			warn('Numeric overflow', from);
 		}
 	};
 
@@ -242,6 +244,7 @@ const factory = (jsonc?: boolean) => {
 			}
 
 			if (jsonc && ch === '/') {
+				const from = at - 1;
 				const peek = text.charAt(at);
 				if (peek === '/') {
 					// Skip single-line comments.
@@ -265,8 +268,10 @@ const factory = (jsonc?: boolean) => {
 					if (ch === '*') {
 						next(); // skip *
 						next(); // skip /
+						continue;
 					}
-					continue;
+					warn('Unterminated block comment', from);
+					return;
 				}
 			}
 
@@ -311,6 +316,7 @@ const factory = (jsonc?: boolean) => {
 			next();
 			return; // empty array
 		} else if (jsonc && ch === ',') {
+			warn('Leading comma in array');
 			next();
 			white();
 			next(']');
@@ -352,6 +358,7 @@ const factory = (jsonc?: boolean) => {
 			next();
 			return; // empty object
 		} else if (jsonc && ch === ',') {
+			warn('Leading comma in object');
 			next();
 			white();
 			next('}');
